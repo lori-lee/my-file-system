@@ -10,28 +10,28 @@ int get_free_size ()
 }
 int _get_next_page (int page_no)
 {
-	int page, byte_order, v;
-	INIT_SUPER_PAGE ();
-	byte_order = BYTE_ORDRE_STORED;
+    int page, byte_order, v;
+    INIT_SUPER_PAGE ();
+    byte_order = BYTE_ORDRE_STORED;
     if (page_no < 0 || page_no >= g_p_super_page->total_pages) return E_INVALID_PARAM;
-	page = _calc_page_offset_in_PAT (&page_no);
-	if (IDX_SUPER_PAGE == page) {
-		return PAT_OFFSET_GET_V (page_no);
-	} else {
-		_read_page_offset (page, page_no, (void *)&v, sizeof (int));
-		
-		return *(int *)convert_byte_order (&v, sizeof (int), byte_order, _little_big_endian ());
-	}
+    page = _calc_page_offset_in_PAT (&page_no);
+    if (IDX_SUPER_PAGE == page) {
+        return PAT_OFFSET_GET_V (page_no);
+    } else {
+        _read_page_offset (page, page_no, (void *)&v, sizeof (int));
+        
+        return *(int *)convert_byte_order (&v, sizeof (int), byte_order, _little_big_endian ());
+    }
 }
 int _alloc_page (int n, int *p_i_page_no)
 {
-	int i, start;
-	
+    int i, start;
+    
     if (n < 0) return E_INVALID_PARAM;
     if (!n) return 0;
-	INIT_SUPER_PAGE ();
-	if (g_p_super_page->idle_pages_num < n) return E_LACK_SPACE;
-	start = g_p_super_page->first_idle_page;
+    INIT_SUPER_PAGE ();
+    if (g_p_super_page->idle_pages_num < n) return E_LACK_SPACE;
+    start = g_p_super_page->first_idle_page;
     p_i_page_no[0] = start;
     for (i = 1; i < n; ++i) {
         p_i_page_no[i] = _get_next_page (p_i_page_no[i - 1]);
@@ -44,7 +44,7 @@ int _alloc_page (int n, int *p_i_page_no)
     if (i < 0) return i;
     i = _write_super_page (g_p_super_page);
     if (i < 0) return i;
-	return n;
+    return n;
 }
 static int _mark_page (int page_no, int v)
 {

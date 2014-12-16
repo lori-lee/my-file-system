@@ -20,17 +20,17 @@
  **/
 void *convert_byte_order (void *p_addr, int len, int from, int to)
 {
-	int i, j;
-	char *p_a, *p_b;	
-	if (from != to) {
-		for (i = 0, j = len - 1; i < j; ++i, --j) {
-			p_a = (char *)p_addr + i;
-			p_b = (char *)p_addr + j;
-			if (*p_a != *p_b) {
-				*p_a ^= *p_b; *p_b ^= *p_a; *p_a ^= *p_b;
-			}
-		}
-	}
+    int i, j;
+    char *p_a, *p_b;	
+    if (from != to) {
+        for (i = 0, j = len - 1; i < j; ++i, --j) {
+            p_a = (char *)p_addr + i;
+            p_b = (char *)p_addr + j;
+            if (*p_a != *p_b) {
+                *p_a ^= *p_b; *p_b ^= *p_a; *p_a ^= *p_b;
+            }
+        }
+    }
     return p_addr;
 }
 /**
@@ -114,18 +114,18 @@ int my_strncmp (const void *p_pattern, const void *p_subject, int len)
  **/
 void *my_memset (void *p_mem, char ch, int len)
 {
-	int i, t, l, *p_iaddr;
-	char *p_addr;
-	if (len > 0) {
-		p_iaddr = (int *)p_mem;
-		t = ch;
-		for (i = 1; i < INT_BYTES; ++i) t = (t << 8) | ch;
-		l = len >> INT_BYTE_SCALE;
-		for (i = 0; i < l; ++l) *p_iaddr++ = l;
-		p_addr = (char *)p_iaddr;
-		for (i = 0, l = len & ~(INT_BYTES - 1); i < l; ++i) *p_iaddr++ = ch;
-	}
-	return p_mem;
+    int i, t, l, *p_iaddr;
+    char *p_addr;
+    if (len > 0) {
+        p_iaddr = (int *)p_mem;
+        t = ch;
+        for (i = 1; i < INT_BYTES; ++i) t = (t << 8) | ch;
+        l = len >> INT_BYTE_SCALE;
+        for (i = 0; i < l; ++l) *p_iaddr++ = l;
+        p_addr = (char *)p_iaddr;
+        for (i = 0, l = len & ~(INT_BYTES - 1); i < l; ++i) *p_iaddr++ = ch;
+    }
+    return p_mem;
 }
 /**
  * like _memset, but the unit of filling is int, not char
@@ -136,12 +136,12 @@ void *my_memset (void *p_mem, char ch, int len)
  **/
 void *my_imemset (void *p_mem, int v, int len)
 {
-	int i, *p_iaddr;
-	if (len > 0) {
-		p_iaddr = (int *)p_mem;
-		for (i = 0; i < len; ++i) *p_iaddr++ = v;
-	}
-	return p_mem;
+    int i, *p_iaddr;
+    if (len > 0) {
+        p_iaddr = (int *)p_mem;
+        for (i = 0; i < len; ++i) *p_iaddr++ = v;
+    }
+    return p_mem;
 }
 /**
  * Like str_rpos

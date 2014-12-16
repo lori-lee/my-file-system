@@ -76,14 +76,14 @@ void *_convert_page_byte_order (void *p_page_addr, int from, int to)
 }
 int _calc_page_offset_in_PAT (int *page_index)
 {
-	int page;
+    int page;
 
-	if (*page_index < PAT_PRE_INT_NUM) {
-		return IDX_SUPER_PAGE;
-	}
-	page = ((*page_index -= PAT_PRE_INT_NUM) + PAGE_INT_NUM) >> PAGE_SCALE - INT_BYTE_SCALE;
-	*page_index &= PAGE_INT_NUM - 1;
-	return page + IDX_SUPER_PAGE;
+    if (*page_index < PAT_PRE_INT_NUM) {
+        return IDX_SUPER_PAGE;
+    }
+    page = ((*page_index -= PAT_PRE_INT_NUM) + PAGE_INT_NUM) >> PAGE_SCALE - INT_BYTE_SCALE;
+    *page_index &= PAGE_INT_NUM - 1;
+    return page + IDX_SUPER_PAGE;
 }
 static int _get_total_pages ()
 {
@@ -103,30 +103,30 @@ static int _calc_PAT_pages ()
 }
 static int _init_page_link_list (int *p_iaddr, int start, int count)
 {
-	while (count-- > 0) {
-		*p_iaddr++ = start++;
-	}
-	return start;
+    while (count-- > 0) {
+        *p_iaddr++ = start++;
+    }
+    return start;
 }
 static void _init_PAT_table_pre ()
 {
-	int i, *p_PAT_start, t, i_cnt_PAT_pre, i_pages_PAT, i_cnt_dir;
+    int i, *p_PAT_start, t, i_cnt_PAT_pre, i_pages_PAT, i_cnt_dir;
 
-	p_PAT_start = (int *)PAT_START_P + IDX_SUPER_PAGE;
-	(*p_PAT_start++) = PAGE_SUPER;
-	i_cnt_PAT_pre = PAT_PRE_INT_NUM - 1 - IDX_SUPER_PAGE;
-	i_pages_PAT   = _calc_PAT_pages ();
-	i_cnt_dir     = _get_reserved_direcotry_pages ();
+    p_PAT_start = (int *)PAT_START_P + IDX_SUPER_PAGE;
+    (*p_PAT_start++) = PAGE_SUPER;
+    i_cnt_PAT_pre = PAT_PRE_INT_NUM - 1 - IDX_SUPER_PAGE;
+    i_pages_PAT   = _calc_PAT_pages ();
+    i_cnt_dir     = _get_reserved_direcotry_pages ();
     //
     my_imemset (p_PAT_start, PAGE_NULL, i_cnt_PAT_pre);
     //allocation table
-	my_imemset ((void *)p_PAT_start, PAGE_ALLOC, MIN(i_pages_PAT, i_cnt_PAT_pre));
+    my_imemset ((void *)p_PAT_start, PAGE_ALLOC, MIN(i_pages_PAT, i_cnt_PAT_pre));
     //partial directory page index located inside the super page
     _init_page_link_list (p_PAT_start + i_pages_PAT, IDX_SUPER_PAGE + i_pages_PAT + 1, MIN(i_cnt_dir, i_cnt_PAT_pre - i_pages_PAT));
     my_imemset (p_PAT_start + i_pages_PAT + i_cnt_dir - 1, PAGE_NULL, MIN(1, i_cnt_PAT_pre - i_pages_PAT - i_cnt_dir + 1));
 
-	//partial data page index located inside the super page.
-	_init_page_link_list (p_PAT_start + i_pages_PAT + i_cnt_dir, g_p_super_page->first_idle_page + 1, i_cnt_PAT_pre - i_pages_PAT - i_cnt_dir);
+    //partial data page index located inside the super page.
+    _init_page_link_list (p_PAT_start + i_pages_PAT + i_cnt_dir, g_p_super_page->first_idle_page + 1, i_cnt_PAT_pre - i_pages_PAT - i_cnt_dir);
     my_imemset (p_PAT_start + _get_total_pages () - 1 - (IDX_SUPER_PAGE + 1), PAGE_NULL, PAT_PRE_INT_NUM - _get_total_pages ());
 }
 static int _calc_PAT_page_end ()
@@ -147,7 +147,7 @@ static int _calc_dir_page_end ()
 }
 static void _init_PAT_table_remained ()
 {
-	int *p_PAT_page, i, i_cnt_dir, page, offset, i_last_page_offset;
+    int *p_PAT_page, i, i_cnt_dir, page, offset, i_last_page_offset;
 
     p_PAT_page = (int *)g_buffer_page;
     offset = _calc_PAT_pages () + IDX_SUPER_PAGE;
@@ -176,11 +176,11 @@ static void _init_PAT_table_remained ()
         
         _write_page (page, (const char *)p_PAT_page, PAGE_SUPER);
     }
-	DESTROY_SUPER_PAGE ();
+    DESTROY_SUPER_PAGE ();
 }
 static void _init_directory_link_list ()
 {
-	int i, *p_dir_page, i_cnt_dir, start_no, i_dir_page_start, page, offset, i_last_page_offset;
+    int i, *p_dir_page, i_cnt_dir, start_no, i_dir_page_start, page, offset, i_last_page_offset;
 
     p_dir_page = (int *)g_buffer_page;
     i_cnt_dir  = _get_reserved_direcotry_pages ();
@@ -210,7 +210,7 @@ static void _init_directory_link_list ()
         //
         _write_page (page, (const char *)p_dir_page, PAGE_SIZE);
     }
-	DESTROY_SUPER_PAGE ();
+    DESTROY_SUPER_PAGE ();
 }
 static void _init_idle_page_link_list ()
 {
@@ -233,15 +233,15 @@ static void _init_idle_page_link_list ()
     my_imemset (p_idle_page + i_idle_offset_end, PAGE_NULL, 1);
     _write_page (i_idle_page_end, (const char *)p_idle_page, PAGE_SIZE);
 
-	DESTROY_SUPER_PAGE ();
+    DESTROY_SUPER_PAGE ();
 }
 static char _checksum (const char *p_mem, int len)
 {
-	char xor = 0;
-	while (len-- > 0) {
-		xor ^= *p_mem++;
-	}
-	return xor;
+    char xor = 0;
+    while (len-- > 0) {
+        xor ^= *p_mem++;
+    }
+    return xor;
 }
 static int _init_super_page ()
 {
