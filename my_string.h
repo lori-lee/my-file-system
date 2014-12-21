@@ -118,4 +118,5 @@ extern int my_itohexa (int n, void *p_buff);
  *
  **/
 extern void my_console (const char *p_str_format, ...);
+extern void my_str_reverse (char *p_str, int start, int len);
 #endif

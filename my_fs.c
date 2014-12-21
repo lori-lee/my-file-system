@@ -313,7 +313,7 @@ static int _create_root_dir ()
 
     return 0;
 }
-static int _normarlize_path (char *p_dir_name)
+static int _normalize_path (char *p_dir_name)
 {
     int start, last, i;
     char *p_tmp = p_dir_name;
@@ -342,7 +342,7 @@ int open_file (char *file_name, int create_if_not_exist)
     directory *_p_directory_node;
     char _tmp_filename[I_NAME_LEN + I_EXT_LEN + 1];
 
-    if ((len = _normarlize_path (file_name)) <= 0) return E_INVALID_PARAM;
+    if ((len = _normalize_path (file_name)) <= 0) return E_INVALID_PARAM;
     DESTROY_SUPER_PAGE ();
     _p_directory_node = (directory *)g_buffer_directory;
 
@@ -423,13 +423,54 @@ int write_file (int i_file_node_index, const void *p_addr, int offset, int len)
         _do_copy_page ();
     }
 }
+int cd (char *p_dir_name)
+{
+    int i_current_no;
 
+    if ((i_current_no = _get_directory_no_by_name (p_dir_name)) < 0) {
+        return i_current_no;
+    }
+    return g_i_current_index = i_current_no;
+}
+static int _get_directory_no_by_name (char *p_dir_name)
+{
+    int len, i_current_dir_no, i_slash_start = 0, i_slash_end;
+    char _tmp_name[I_NAME_LEN + I_EXT_LEN + 1];
+    
+    if ((len = _normalize_path (p_dir_name)) < 0) return len;
+    if ('/' == *p_dir_name) {
+        i_current_dir_no = 0;
+        ++i_slash_start;
+    } else i_current_dir_no = g_i_current_dir_index; 
+    assert (i_current_dir_no >= 0);
+    //
+    while (i_slash_start < len) {
+        i_slash_end = my_str_pos ("/", p_dir_name, i_slash_start, 1, len - i_slash_start);
+        if (PAGE_NULL == i_slash_end) i_slash_end = len - 1;
+        if (i_slash_end - i_slash_start > I_NAME_LEN + I_EXT_LEN) return E_INVALID_PARAM;
+        my_strncpy (p_dir_name, _tmp_name, i_slash_start, i_slash_end - i_slash_start);
+        if (!my_strcmp (".", _tmp_name, i_slash_end - i_slash_start)) {
+            //DO NOTHING
+        } else if (!my_strcmp ("..", _tmp_name, i_slash_end - i_slash_start)) {
+            if (i_current_dir_no) {
+                i_current_dir_no = _get_directory_parent_index (i_current_dir_no);
+            }
+        } else {
+            i_current_dir_no = _get_child_dir_no_by_name (i_current_dir_no, _tmp_name, i_slash_end - i_slash_start, TYPE_DIR);
+        }
+        if (i_current_dir_no < 0) {
+            return i_current_dir_no;
+        }
+        i_slash_start = i_slash_end + 1;
+    }
+    return i_current_dir_no;
+}
 static int _get_parent_directory_value_by_path_name (char *p_dir_name, directory *p_parent_directory)
 {
     int len, i_current_dir_no, i_slash_pos_start = 0, i_slash_pos_end, i_parent_path_end_pos;
     char _tmp_name[I_NAME_LEN + I_EXT_LEN];
 
-    if ((len = _normarlize_path (p_dir_name)) <= 0) return E_INVALID_PARAM;
+    if ((len = _normalize_path (p_dir_name)) <= 0) return E_INVALID_PARAM;
     if ('/' == *p_dir_name) {
         ++i_slash_pos_start;
         i_current_dir_no = 0;
@@ -441,9 +482,17 @@ static int _get_parent_directory_value_by_path_name (char *p_dir_name, directory
     if (i_parent_path_end_pos > i_slash_pos_start) {//check parent path & change to the directory parent
         do {
             i_slash_pos_end = my_str_pos ("/", p_dir_name, i_slash_pos_start, 1, i_parent_path_end_pos - i_slash_pos_start);
-            if (i_slash_pos_end - i_slash_pos_start >= I_NAME_LEN + I_EXT_LEN) return E_INVALID_PARAM;
+            if (i_slash_pos_end - i_slash_pos_start > I_NAME_LEN + I_EXT_LEN) return E_INVALID_PARAM;
             my_strncpy (p_dir_name, _tmp_name, i_slash_pos_end - i_slash_pos_start);
-            i_current_dir_no = _get_child_directory_by_name (i_current_dir_no, _tmp_name, i_slash_pos_end - i_slash_pos_start, TYPE_DIR, p_parent_directory);
+            if (!my_strcmp (".", _tmp_name, i_slash_pos_end - i_slash_pos_start)) {
+                //DO NOTHING
+            } else if (!my_strcmp ("..", _tmp_name, i_slash_pos_end - i_slash_pos_start)) {
+                if (i_current_dir_no) {
+                    i_current_dir_no = _get_directory_parent_index (i_current_dir_no);
+                }
+            } else {
+                i_current_dir_no = _get_child_directory_by_name (i_current_dir_no, _tmp_name, i_slash_pos_end - i_slash_pos_start, TYPE_DIR, p_parent_directory);
+            }
             if (i_current_dir_no < 0) return E_NO_DIR;
             i_slash_pos_start = i_slash_pos_end + 1;
         } while (i_slash_pos_end < i_parent_path_end_pos);
@@ -491,7 +540,7 @@ int rm_dir (char *p_dir_name)
     directory _tmp_dir_node;
     char _tmp_name[I_NAME_LEN + I_EXT_LEN + 1];
 
-    if ((len = _normarlize_path (p_dir_name)) <= 0) return E_INVALID_PARAM;
+    if ((len = _normalize_path (p_dir_name)) <= 0) return E_INVALID_PARAM;
     if ((i_parent_dir_no = _get_parent_directory_value_by_path_name (p_dir_name, &_tmp_dir_node)) < 0) return i_parent_dir_no;
 
     my_strncpy (_tmp_dir_node.name, _tmp_name, I_NAME_LEN + I_EXT_LEN);
@@ -510,7 +559,26 @@ int rm_dir (char *p_dir_name)
 
     return _write_directory_node_value (i_target_dir_no, &_tmp_dir_node);
 }
+int get_cwd (char *p_addr)
+{
+    int i_current_dir_no, i_current_len = 0, i_delta_len, i_slash_start, i_slash_end;
 
+    i_current_dir_no = g_i_current_dir_index;
+    while (PAGE_NULL != i_current_dir_no) {
+        _get_directory_node_name (i_current_dir_no, p_addr + i_current_len);
+        i_delta_len = my_strlen (p_addr + i_current_len);
+        i_current_len += i_delta_len;
+        p_addr[i_current_len++] = '/';
+        i_current_dir_no = _get_directory_parent_index (i_current_dir_no);
+    }
+    my_str_reverse (p_addr, 0, i_current_len);
+    for (i_slash_start = 1; i_slash_start < i_current_len; i_slash_start = i_slash_end + 1) {
+        i_slash_end = my_str_pos ("/", p_addr, i_slash_start, 1, i_current_len - i_slash_start);
+        if (PAGE_NULL == i_slash_end) i_slash_end = i_current_len;
+        my_str_reverse (p_addr + i_slash_start, 0, i_slash_end - i_slash_start);
+    }
+    return 0;
+}
 #ifdef _DEBUG_
 #undef _DEBUG_
 int main (void)
@@ -523,9 +591,9 @@ int main (void)
     page_index = 155;
     page_no = _calc_page_offset_in_PAT (&page_index);
     my_console ("page index:%d:%d, total pages:%d, PAT pages:%d\n", page_no, page_index, _get_total_pages (), _calc_PAT_pages ());
-    _normarlize_path (buff);
+    _normalize_path (buff);
     my_console ("%s\n", buff);
-    _normarlize_path (buff);
+    _normalize_path (buff);
     my_console ("%s\n", buff);
     setup_FS ();
     return 0;

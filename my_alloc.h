@@ -106,7 +106,9 @@ extern int _get_child_directory_index (int i_parent_dir_no);
 extern int _get_directory_sibling_index (int i_dir_no);
 extern int _get_directory_parent_index (int i_dir_no);
 extern void *_get_directory_node_name (int i_dir_no, void *p_buffer);
+extern int _get_directory_type (int i_dir_no);
 
+extern int _get_child_dir_no_by_name (int i_parent_dir_no, const char *p_name, int len, int type);
 int _get_file_size (int i_file_node_index);
 extern int _is_sub_dir_exists (int i_parent_dir_no, const char *p_name, int len, int type);
 /**

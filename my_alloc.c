@@ -270,6 +270,14 @@ void *_get_directory_node_name (int i_dir_no, void *p_buffer)
     _get_directory_node_field_value (i_dir_no, p_buffer, DIRECTORY_FIELD_OFFSET (name), DIRECTORY_FIELD_OFFSET (type));
     return p_buffer;
 }
+int _get_directory_type (int i_dir_no)
+{
+    char type;
+    
+    _get_directory_node_field_value (i_dir_no, &type, DIRECTORY_FIELD_OFFSET (type), sizeof (char));
+
+    return type;
+}
 int _get_file_size (int i_file_node_index)
 {
     _get_directory_parent_index (i_file_node_index);
@@ -283,6 +291,22 @@ int _is_sub_dir_exists (int i_parent_dir_no, const char *p_name, int len, int ty
     if (r < 0) return r;
     else if (r > 0) return r;
     else return 0;
+}
+int _get_child_dir_no_by_name (int i_parent_dir_no, const char *p_name, int len, int type)
+{
+    int i_next_sibling;
+    char _tmp_name[I_NAME_LEN + I_EXT_LEN + 1], node_type;
+
+    i_next_sibling = _get_child_directory_index (i_parent_dir_no);
+    while (PAGE_NULL != i_next_sibling) {
+        if ((node_type = _get_directory_type (i_next_sibling)) < 0) return node_type;
+        if (type == node_type) {
+            _get_directory_node_name (i_next_sibling, _tmp_name);
+            if (!my_strcmp (p_name, _tmp_name, len)) return i_next_sibling;
+        }
+        if ((i_next_sibling = _get_directory_sibling_index (i_next_sibling)) < 0) return i_next_sibling;
+    }
+    return PAGE_NULL;
 }
 int _get_child_directory_by_name (int i_parent_dir_no, const char *p_name, int len, int type, directory *p_directory)
 {

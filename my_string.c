@@ -261,6 +261,16 @@ void my_console (const char *p_str_format, ...)
     }
     va_end (var);
 }
+void my_str_reverse (char *p_str, int offset, int len)
+{
+    int i, j;
+    
+    for (i = offset, j = offset + len - 1; i < j; ++i, --j) {
+        if (p_str[i] != p_str[j]) {
+            p_str[i] ^= p_str[j]; p_str[j] ^= p_str[i]; p_str[i] ^= p_str[j];
+        }
+    }
+}
 #ifdef _DEBUG_MY_STRING_
 int main (void)
 {

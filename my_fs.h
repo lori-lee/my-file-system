@@ -468,7 +468,7 @@ extern int cd (const char *dir_name);
  * @param <directory>
  *
  **/
-extern int list_next_child (directory *p_dir);
+extern int list_next_child (char *p_dir_name);
 /**
  *
  * Get current working directory
