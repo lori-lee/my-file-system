@@ -379,6 +379,7 @@ extern int is_FS_exist ();
  *
  **/
 static int _get_parent_directory_value_by_path_name (char *p_dir_name, directory *p_parent_directory);
+static int _get_directory_no_by_name (char *p_dir_name);
 /**
  *
  * Open a file
@@ -451,7 +452,7 @@ extern int rm_dir (char *dir_name);
  * @return <int> >= 0 (success), < 0 (error occured)
  *
  **/
-extern int rm_file (const char *file_name);
+extern int rm_file (char *file_name);
 /**
  *
  * Change current working directory to dir_name
@@ -461,7 +462,7 @@ extern int rm_file (const char *file_name);
  * @return <int> >= 0 (success), < 0 (error)
  *
  **/
-extern int cd (const char *dir_name);
+extern int cd (char *dir_name);
 /**
  * List the next sibling tree node of current.
  *

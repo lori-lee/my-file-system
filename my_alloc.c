@@ -236,7 +236,7 @@ static int _get_directory_node_field_value (int i_dir_no, void *p_buff, int offs
     }
     return bytes;
 }
-static char _get_directory_type (int i_dir_no)
+int _get_directory_type (int i_dir_no)
 {
     char type;
 
@@ -269,14 +269,6 @@ void *_get_directory_node_name (int i_dir_no, void *p_buffer)
 {
     _get_directory_node_field_value (i_dir_no, p_buffer, DIRECTORY_FIELD_OFFSET (name), DIRECTORY_FIELD_OFFSET (type));
     return p_buffer;
-}
-int _get_directory_type (int i_dir_no)
-{
-    char type;
-    
-    _get_directory_node_field_value (i_dir_no, &type, DIRECTORY_FIELD_OFFSET (type), sizeof (char));
-
-    return type;
 }
 int _get_file_size (int i_file_node_index)
 {

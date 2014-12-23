@@ -423,6 +423,17 @@ int write_file (int i_file_node_index, const void *p_addr, int offset, int len)
         _do_copy_page ();
     }
 }
+int rm_file (char *p_file_name)
+{
+    int i_last_slash_pos, i_parent_dir_no;
+    directory _target_dir;
+
+    if ((i_parent_dir_no = _get_parent_directory_value_by_path_name (p_file_name, &_target_dir)) < 0) return i_parent_dir_no;
+    i_last_slash_pos = my_str_rpos ("/", p_file_name, 1, my_strlen (p_file_name));
+    if ((i_parent_dir_no = _get_child_directory_by_name (i_parent_dir_no, p_file_name + i_last_slash_pos + 1, my_strlen (p_file_name) - i_last_slash_pos, TYPE_FILE, &_target_dir)) < 0) {
+        return i_parent_dir_no;
+    }
+}
 int cd (char *p_dir_name)
 {
     int i_current_no;
@@ -430,7 +441,7 @@ int cd (char *p_dir_name)
     if ((i_current_no = _get_directory_no_by_name (p_dir_name)) < 0) {
         return i_current_no;
     }
-    return g_i_current_index = i_current_no;
+    return g_i_current_dir_index = i_current_no;
 }
 static int _get_directory_no_by_name (char *p_dir_name)
 {
@@ -448,10 +459,10 @@ static int _get_directory_no_by_name (char *p_dir_name)
         i_slash_end = my_str_pos ("/", p_dir_name, i_slash_start, 1, len - i_slash_start);
         if (PAGE_NULL == i_slash_end) i_slash_end = len - 1;
         if (i_slash_end - i_slash_start > I_NAME_LEN + I_EXT_LEN) return E_INVALID_PARAM;
-        my_strncpy (p_dir_name, _tmp_name, i_slash_start, i_slash_end - i_slash_start);
-        if (!my_strcmp (".", _tmp_name, i_slash_end - i_slash_start)) {
+        my_strncpy (p_dir_name + i_slash_start, _tmp_name, i_slash_end - i_slash_start);
+        if (!my_strncmp (".", _tmp_name, i_slash_end - i_slash_start)) {
             //DO NOTHING
-        } else if (!my_strcmp ("..", _tmp_name, i_slash_end - i_slash_start)) {
+        } else if (!my_strncmp ("..", _tmp_name, i_slash_end - i_slash_start)) {
             if (i_current_dir_no) {
                 i_current_dir_no = _get_directory_parent_index (i_current_dir_no);
             }
@@ -484,9 +495,9 @@ static int _get_parent_directory_value_by_path_name (char *p_dir_name, directory
             i_slash_pos_end = my_str_pos ("/", p_dir_name, i_slash_pos_start, 1, i_parent_path_end_pos - i_slash_pos_start);
             if (i_slash_pos_end - i_slash_pos_start > I_NAME_LEN + I_EXT_LEN) return E_INVALID_PARAM;
             my_strncpy (p_dir_name, _tmp_name, i_slash_pos_end - i_slash_pos_start);
-            if (!my_strcmp (".", _tmp_name, i_slash_pos_end - i_slash_pos_start)) {
+            if (!my_strncmp (".", _tmp_name, i_slash_pos_end - i_slash_pos_start)) {
                 //DO NOTHING
-            } else if (!my_strcmp ("..", _tmp_name, i_slash_pos_end - i_slash_pos_start)) {
+            } else if (!my_strncmp ("..", _tmp_name, i_slash_pos_end - i_slash_pos_start)) {
                 if (i_current_dir_no) {
                     i_current_dir_no = _get_directory_parent_index (i_current_dir_no);
                 }
