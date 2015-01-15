@@ -390,42 +390,99 @@ static int _get_real_page_index (int i_page_link_list_head, int i_page_offset)
 int _write_aligned_by_page  (const void *p_addr, int offset, int len)
 {
 }
-static int _do_copy_page (int from_page, int to_page, int from_offset, int to_offset)
+int _append_file (int dir_no, directory *p_file_dir, const void *p_addr, int len)
 {
-    char *p_buffer;
-
-    DESTROY_SUPER_PAGE ();
-    p_buffer = (char *)g_buffer_page;
-    while (PAGE_NULL != to_page) {
-    }
-}
-int write_file (int i_file_node_index, const void *p_addr, int offset, int len)
-{
-    directory _tmp_directory;
-    int _link_list[PAGES_OCCUPIED (len)], i_page_index, i_page_offset;
+    int i_first_page_alloc = PAGE_NULL, i_pre_page_no = PAGE_NULL, i_page_offset, i_remained_bytes, _len = len;
 
     if (len <= 0) return 0;
     INIT_SUPER_PAGE ();
     if (g_p_super_page->idle_pages_num < PAGES_OCCUPIED (len)) return E_LACK_SPACE;
+    i_page_offset = p_file_dir->parent_filesize & ~(PAGE_SIZE - 1);
+    if (i_page_offset) {
+        i_remained_bytes = PAGE_SIZE - i_page_offset;
+        if (_write_page_offset (p_file_dir->first_child_lastpage, i_page_offset, p_addr, MIN (len, i_remained_bytes)) < 0) {
+            return E_WT;
+        }
+        p_addr += MIN (len, i_remained_bytes);
+        p_file_dir->parent_filesize += MIN (len, i_remained_bytes);
+        len   -= MIN (len, i_remained_bytes);
+    }
+    while (len > 0) {
+        if ((i_page_offset = _alloc_page (1, &i_remained_bytes)) < 0) {
+            _free_page (i_remained_bytes);
+            return i_page_offset;
+        }
+        if ((i_page_offset = _write_page (i_remained_bytes, p_addr, MIN (PAGE_SIZE, len))) < 0) goto error;
+        if ((i_page_offset = _mark_page (i_remained_bytes, PAGE_NULL)) < 0) goto error;
+        if (PAGE_NULL != i_first_page_alloc) i_first_page_alloc = i_remained_bytes;
+        if (PAGE_NULL != i_pre_page_no) {
+            if ((i_page_offset = _mark_page (i_pre_page_no, i_remained_bytes)) < 0) goto error;
+        }
+        p_addr += PAGE_SIZE;
+        p_file_dir->parent_filesize += PAGE_SIZE;
+        len -= MIN (len, PAGE_SIZE);
+        i_pre_page_no = i_remained_bytes;
+    }
+    if (PAGE_NULL != i_first_page_alloc) {
+        if ((i_page_offset = _mark_page (p_file_dir->first_child_lastpage, i_first_page_alloc)) < 0) return i_page_offset;
+        p_file_dir->first_child_lastpage = i_remained_bytes;
+    }
+    if ((i_page_offset = _write_directory_node_value (dir_no, p_file_dir)) < 0) return i_page_offset;
+    return _len;
+error:
+    _free_page (i_remained_bytes);
+    return i_page_offset;
+}
+int _overwrite_file_offset (directory *p_file_dir, int i_page_start, int i_page_offset, const void *p_addr, int len)
+{
+    int i_rt_code, _l;
+
+    len = _l = MIN (p_file_dir->parent_filesize, len);
+    while (len > 0) {
+        if ((i_rt_code = _write_page_offset (i_page_start, i_page_offset, p_addr, MIN (len, PAGE_SIZE - i_page_offset))) < 0) return i_rt_code;
+        p_addr += MIN (len, PAGE_SIZE - i_page_offset);
+        len -= MIN (len, PAGE_SIZE - i_page_offset);
+        i_page_offset = 0;
+        i_page_start = _get_next_page (i_page_start);
+    }
+
+    return _l;
+}
+int write_file (int i_file_node_index, const void *p_addr, int offset, int len)
+{
+    directory _tmp_directory;
+    int i_page_index, i_page_offset, i_page_real_index, i_rt_code;
+
+    if (len <= 0) return 0;
 
     _get_directory_node_value (i_file_node_index, &_tmp_directory);
     if (TYPE_FILE != NODE_TYPE (_tmp_directory)
         || NODE_IS_FREE(_tmp_directory) || _tmp_directory.parent_filesize < 0) {
         return E_INVALID_PARAM;
     }
-    offset = MIN (_tmp_directory.parent_filesize, MAX (0, offset));
-    i_page_index = offset >> PAGE_SCALE;
-    i_page_offset= offset & ~(PAGE_SIZE - 1);
-    if (i_page_offset) {
-        _write_first_page ();
+    offset = MAX (MIN (offset, _tmp_directory.parent_filesize - 1), 0);
+    if (offset + len + 1 > _tmp_directory.parent_filesize) {
+        INIT_SUPER_PAGE ();
+        if (g_p_super_page->idle_pages_num < PAGES_OCCUPIED (offset + len + 1 - _tmp_directory.parent_filesize)) return E_LACK_SPACE;
     }
-    if (len + offset > PAGE_SIZE) {
-        _do_copy_page ();
+
+    if (offset < _tmp_directory.parent_filesize) {
+        i_page_offset= offset & ~(PAGE_SIZE - 1);
+        if (!offset) {
+            i_page_real_index = _tmp_directory.first_data_page;
+        } else {
+            i_page_index = offset >> PAGE_SCALE;
+            i_page_real_index = _get_page_index_by_link_node_index (_tmp_directory.first_data_page, i_page_index);
+        }
     }
+    if ((i_rt_code = _overwrite_file_offset (&_tmp_directory, i_page_real_index, i_page_offset, p_addr, len)) < 0) return i_rt_code;
+    if ((i_rt_code = _append_file (i_file_node_index, &_tmp_directory, p_addr + _tmp_directory.parent_filesize, len - _tmp_directory.parent_filesize)) < 0) return i_rt_code;
+
+    return len;
 }
 int rm_file (char *p_file_name)
 {
-    int i_last_slash_pos, i_parent_dir_no;
+    int i_last_slash_pos, i_parent_dir_no, i_rt_code;
     directory _target_dir;
 
     if ((i_parent_dir_no = _get_parent_directory_value_by_path_name (p_file_name, &_target_dir)) < 0) return i_parent_dir_no;
@@ -433,6 +490,7 @@ int rm_file (char *p_file_name)
     if ((i_parent_dir_no = _get_child_directory_by_name (i_parent_dir_no, p_file_name + i_last_slash_pos + 1, my_strlen (p_file_name) - i_last_slash_pos, TYPE_FILE, &_target_dir)) < 0) {
         return i_parent_dir_no;
     }
+    _get_directory_node_value (i_parent_dir_no, &_target_dir);
 }
 int cd (char *p_dir_name)
 {

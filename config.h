@@ -2,12 +2,12 @@
 #define _MY_CONFIG_H_
 
 #define _DEBUG_
-
-#define MEM_SIZE 512
-
+//total memory size(bytes)
+#define MEM_SIZE (10 * 1024)
+//page size
 #define PAGE_SCALE     8
 #define PAGE_SIZE (1 << PAGE_SCALE)
-
+//offset of super page (index starts from 0)
 #define IDX_SUPER_PAGE 1
 
 #define INT_BYTES 4

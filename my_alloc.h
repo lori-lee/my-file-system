@@ -35,7 +35,7 @@ static int _mark_page (int page_no, int v);
  *
  * @param <int> page_no the page to be free
  *
- * @return <int> > 0 (success) <= 0 (error)
+ * @return <int> > 0 (success) < 0 (error)
  *
  **/
 static int _free_page (int page_no);
@@ -63,7 +63,7 @@ extern directory *_get_directory_node_value (int dir_no, directory *p_dir);
  * @param <int> dir_no
  * @param <directory *> p_dire the contents to be written
  *
- * @return <int> >0 (success), <= 0 (error)
+ * @return <int> >0 (success), < 0 (error)
  *
  **/
 extern int _write_directory_node_value (int dir_no, directory *p_dir);
@@ -107,6 +107,7 @@ extern int _get_directory_sibling_index (int i_dir_no);
 extern int _get_directory_parent_index (int i_dir_no);
 extern void *_get_directory_node_name (int i_dir_no, void *p_buffer);
 extern int _get_directory_type (int i_dir_no);
+extern int _get_page_index_by_link_node_index (int link_list_head, int link_list_node_offset);
 
 extern int _get_child_dir_no_by_name (int i_parent_dir_no, const char *p_name, int len, int type);
 int _get_file_size (int i_file_node_index);

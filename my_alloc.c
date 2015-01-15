@@ -294,7 +294,7 @@ int _get_child_dir_no_by_name (int i_parent_dir_no, const char *p_name, int len,
         if ((node_type = _get_directory_type (i_next_sibling)) < 0) return node_type;
         if (type == node_type) {
             _get_directory_node_name (i_next_sibling, _tmp_name);
-            if (!my_strcmp (p_name, _tmp_name, len)) return i_next_sibling;
+            if (!my_strncmp (p_name, _tmp_name, len)) return i_next_sibling;
         }
         if ((i_next_sibling = _get_directory_sibling_index (i_next_sibling)) < 0) return i_next_sibling;
     }
@@ -334,4 +334,12 @@ int _get_child_directory_by_name (int i_parent_dir_no, const char *p_name, int l
         child = p_directory->sibling;
     }
     return PAGE_NULL;
+}
+int _get_page_index_by_link_node_index (int link_list_head, int link_list_node_offset)
+{
+    if (link_list_head <= IDX_SUPER_PAGE || link_list_node_offset < 0) return E_INVALID_PARAM;
+    while (link_list_node_offset-- > 0 && PAGE_NULL != link_list_head) {
+        link_list_head = _get_next_page (link_list_head);
+    }
+    return link_list_head;
 }
