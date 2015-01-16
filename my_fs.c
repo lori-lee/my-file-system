@@ -382,7 +382,7 @@ int get_file_size (char *file_name)
 }
 static int _get_real_page_index (int i_page_link_list_head, int i_page_offset)
 {
-    while (i_page_offset-- > 0 && PAGE_NULL != i_page_link_list_head) {
+    while (i_page_offset-- > 0 && i_page_link_list_head >= 0) {
         i_page_link_list_head = _get_next_page (i_page_link_list_head);
     }
     return i_page_link_list_head;
