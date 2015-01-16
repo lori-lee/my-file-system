@@ -469,7 +469,7 @@ extern int cd (char *dir_name);
  * @param <directory>
  *
  **/
-extern int list_next_child (char *p_dir_name);
+extern int list_next_child (char *p_dir_name, char **p_buff);
 /**
  *
  * Get current working directory

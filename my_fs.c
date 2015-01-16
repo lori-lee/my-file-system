@@ -648,6 +648,29 @@ int get_cwd (char *p_addr)
     }
     return 0;
 }
+int list_next_child (char *p_dir_name, char **p_buff)
+{
+    static int i_sdir_no = PAGE_NULL, i_scurr_child = PAGE_NULL;
+    static char name[I_NAME_LEN + I_EXT_LEN + 1];
+    int i_len, i_curr_dir_no;
+    directory _tmp_dir;
+
+    if ((i_len = _normalize_path (p_dir_name)) <= 0) return E_INVALID_PARAM;
+    if ((i_curr_dir_no =  _get_directory_no_by_name (p_dir_name)) < 0) return i_curr_dir_no;
+    if (i_sdir_no != i_curr_dir_no) { 
+        _get_directory_node_value (i_curr_dir_no, &_tmp_dir);
+        i_scurr_child = _tmp_dir.first_child_lastpage;
+        i_sdir_no = i_curr_dir_no;
+    }
+    if (PAGE_NULL != i_scurr_child) {
+        _get_directory_node_value (i_scurr_child, &_tmp_dir);
+        my_memset (name, 0, I_NAME_LEN + I_EXT_LEN + 1);
+        my_strncpy (_tmp_dir.name, name, I_NAME_LEN + I_EXT_LEN + 1);
+        *p_buff = name;
+        i_scurr_child = _tmp_dir.sibling;
+        return 0;
+    } else return PAGE_NULL;
+}
 #ifdef _DEBUG_
 #undef _DEBUG_
 int main (void)
