@@ -14,22 +14,19 @@
 
 #if INT_BYTES == 4
     #define INT_BYTE_SCALE 2
+    typedef int int32;
+    typedef unsigned int uint32;
 #elif INT_BYTES == 2
     #define INT_BYTE_SCALE 1
+    typedef long int32;
+    typedef unsigned long uint32;
 #elif INT_BYTES == 1
     #define INT_BYTE_SCALE 0
+    typedef long long int32;
 #endif
+typedef unsigned char uchar;
 
-static int _get_flash_bytes ()
-{
-    return 1 << 20;
-}
-static int _get_current_datetime ()
-{
-    return 0;
-}
-static int _get_reserved_direcotry_pages ()
-{
-    return 1 << 6;
-}
+int32 _get_flash_bytes ();
+int32 _get_current_datetime ();
+int32 _get_reserved_direcotry_pages ();
 #endif

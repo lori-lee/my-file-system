@@ -11,16 +11,16 @@
  * Convert the byte order from type [from] to [to]
  *
  * @param <void *> p_addr contents to be converted
- * @param <int> len bytes to be converted
+ * @param <int32> len bytes to be converted
  * @param <enum> from (LITTLE_ENDIAN | BIG_ENDIAN)
  * @param <enum> to (LITTLE_ENDIAN | BIG_ENDIAN)
  *
  * @return <void *> p_addr
  *
  **/
-void *convert_byte_order (void *p_addr, int len, int from, int to)
+void *convert_byte_order (void *p_addr, int32 len, int32 from, int32 to)
 {
-    int i, j;
+    int32 i, j;
     char *p_a, *p_b;	
     if (from != to) {
         for (i = 0, j = len - 1; i < j; ++i, --j) {
@@ -38,15 +38,15 @@ void *convert_byte_order (void *p_addr, int len, int from, int to)
  * Convert the byte order by unit from type [from] to [to]
  *
  * @param <void *> p_addr contents to be converted
- * @param <int> unit
- * @param <int> len bytes to be converted
+ * @param <int32> unit
+ * @param <int32> len bytes to be converted
  * @param <enum> from (LITTLE_ENDIAN | BIG_ENDIAN)
  * @param <enum> to (LITTLE_ENDIAN | BIG_ENDIAN)
  *
  * @return <void *> p_addr
  *
  **/
-void *convert_byte_order_by_unit (void *p_addr, int unit, int len, int from, int to)
+void *convert_byte_order_by_unit (void *p_addr, int32 unit, int32 len, int32 from, int32 to)
 {
     void *p_a;
     if (from != to) {
@@ -65,12 +65,12 @@ void *convert_byte_order_by_unit (void *p_addr, int unit, int len, int from, int
  *
  * @param <const void *>p_addr_src
  * @param <void *>p_addr_dest
- * @param <int> len
+ * @param <int32> len
  *
  * @return <void *>p_addr_dest
  *
  **/
-void *my_strncpy (const void *p_addr_src, void *p_addr_dest, int len)
+void *my_strncpy (const void *p_addr_src, void *p_addr_dest, int32 len)
 {
     void *p_dest = p_addr_dest;
     if (len <= 0 || p_addr_src == p_addr_dest) return p_addr_dest;
@@ -88,11 +88,11 @@ void *my_strncpy (const void *p_addr_src, void *p_addr_dest, int len)
  * 
  * @param <const void *> p_pattern the address of the first string
  * @param <const void *> p_subject the address of the second string
- * @param <int> len the length of bytes to be compared
+ * @param <int32> len the length of bytes to be compared
  *
- * @return <int> < 0(p_pattern < p_subject) = 0 or > 0
+ * @return <int32> < 0(p_pattern < p_subject) = 0 or > 0
  **/
-int my_strncmp (const void *p_pattern, const void *p_subject, int len)
+int32 my_strncmp (const void *p_pattern, const void *p_subject, int32 len)
 {
     const char *p_str_pt, *p_str_sub;
     p_str_pt = (const char *)p_pattern;
@@ -109,15 +109,15 @@ int my_strncmp (const void *p_pattern, const void *p_subject, int len)
 /**
  * like libc memset
  * @param <void *> p_mem
- * @param <int> len
+ * @param <int32> len
  *
  **/
-void *my_memset (void *p_mem, char ch, int len)
+void *my_memset (void *p_mem, char ch, int32 len)
 {
-    int i, t, l, *p_iaddr;
+    int32 i, t, l, *p_iaddr;
     char *p_addr;
     if (len > 0) {
-        p_iaddr = (int *)p_mem;
+        p_iaddr = (int32 *)p_mem;
         t = ch;
         for (i = 1; i < INT_BYTES; ++i) t = (t << 8) | ch;
         l = len >> INT_BYTE_SCALE;
@@ -128,17 +128,17 @@ void *my_memset (void *p_mem, char ch, int len)
     return p_mem;
 }
 /**
- * like _memset, but the unit of filling is int, not char
+ * like _memset, but the unit of filling is int32, not char
  * @param <void *> p_mem
- * @param <int> v
- * @param <int> len
+ * @param <int32> v
+ * @param <int32> len
  *
  **/
-void *my_imemset (void *p_mem, int v, int len)
+void *my_imemset (void *p_mem, int32 v, int32 len)
 {
-    int i, *p_iaddr;
+    int32 i, *p_iaddr;
     if (len > 0) {
-        p_iaddr = (int *)p_mem;
+        p_iaddr = (int32 *)p_mem;
         for (i = 0; i < len; ++i) *p_iaddr++ = v;
     }
     return p_mem;
@@ -147,12 +147,12 @@ void *my_imemset (void *p_mem, int v, int len)
  * Like str_rpos
  * @param <const char *> p_pattern
  * @param <const char *> p_subject
- * @param <int> len_pattern
- * @param <int> len_subject
+ * @param <int32> len_pattern
+ * @param <int32> len_subject
  *
- * @return <int>
+ * @return <int32>
  **/
-int my_str_rpos (const char *p_pattern, const char *p_subject, int len_pattern, int len_subject)
+int32 my_str_rpos (const char *p_pattern, const char *p_subject, int32 len_pattern, int32 len_subject)
 {
     const char *p_t_subject = p_subject + len_subject - len_pattern;
     if (len_pattern > len_subject) return PAGE_NULL;
@@ -162,7 +162,7 @@ int my_str_rpos (const char *p_pattern, const char *p_subject, int len_pattern, 
     }
     return PAGE_NULL;
 }
-int my_str_pos (const char *p_pattern, const char *p_subject, int start, int len_pattern, int len_subject)
+int32 my_str_pos (const char *p_pattern, const char *p_subject, int32 start, int32 len_pattern, int32 len_subject)
 {
     if (start < 0 || len_pattern < 0 || len_subject < 0) return E_INVALID_PARAM;
     len_subject -= len_pattern;
@@ -172,15 +172,15 @@ int my_str_pos (const char *p_pattern, const char *p_subject, int start, int len
     }
     return PAGE_NULL;
 }
-int my_strlen (const char *p_str)
+int32 my_strlen (const char *p_str)
 {
-    int len = 0;
+    int32 len = 0;
     while (*p_str++) len++;
     return len;
 }
-int my_itoa (int n, void *p_buff)
+int32 my_itoa (int32 n, void *p_buff)
 {
-    int i = 0, j = n;
+    int32 i = 0, j = n;
     if (n < 0) n = -n;
     do {
         *(char *)(p_buff + i++) = (n % 10) | 0x30;
@@ -190,9 +190,9 @@ int my_itoa (int n, void *p_buff)
     convert_byte_order (p_buff, i, 0, 1);
     return i;
 }
-int my_itohexa (int n, void *p_buff)
+int32 my_itohexa (int32 n, void *p_buff)
 {
-    int i = 0, j = n;
+    int32 i = 0, j = n;
     if (n < 0) n = -n;
     do {
         if ((n & 15) >= 10) *(char *)(p_buff + i++) = (n & 15) - 10 + 'A';
@@ -203,7 +203,7 @@ int my_itohexa (int n, void *p_buff)
     convert_byte_order (p_buff, i, 0, 1);
     return i;
 }
-static void _my_puts (const char *p_str, int start, int len)
+static void _my_puts (const char *p_str, int32 start, int32 len)
 {
 #ifdef _DEBUG_
     while (len-- > 0) printf ("%c", p_str[start++]);
@@ -217,7 +217,7 @@ static void _my_putchar (char ch)
 }
 void my_console (const char *p_str_format, ...)
 {
-    int status = 0, i = 0, n;
+    int32 status = 0, i = 0, n;
     char tmp[INT_BYTES], ch;
     const char *p_str;
     va_list var;
@@ -233,20 +233,20 @@ void my_console (const char *p_str_format, ...)
         case 0x1:
             switch (p_str_format[i]) {
             case 'c':
-                if (sizeof (void *) > sizeof (int)) {//64 bit
-                    ch = va_arg (var, int);
+                if (sizeof (void *) > sizeof (int32)) {//64 bit
+                    ch = va_arg (var, int32);
                 } else ch = va_arg (var, char);
                 _my_putchar (ch); break;
             case 's':
                 p_str = va_arg (var, const char *);
                 _my_puts (p_str, 0, my_strlen (p_str)); break;
             case 'd':
-                n = va_arg (var, int);
+                n = va_arg (var, int32);
                 n = my_itoa (n, tmp);
                 _my_puts (tmp, 0, n); break;
             case 'x':
             case 'p':
-                n = my_itohexa (va_arg (var, int), tmp);
+                n = my_itohexa (va_arg (var, int32), tmp);
                 _my_puts (tmp, 0, n);
                 break;
             case '%':
@@ -261,9 +261,9 @@ void my_console (const char *p_str_format, ...)
     }
     va_end (var);
 }
-void my_str_reverse (char *p_str, int offset, int len)
+void my_str_reverse (char *p_str, int32 offset, int32 len)
 {
-    int i, j;
+    int32 i, j;
     
     for (i = offset, j = offset + len - 1; i < j; ++i, --j) {
         if (p_str[i] != p_str[j]) {
@@ -272,7 +272,7 @@ void my_str_reverse (char *p_str, int offset, int len)
     }
 }
 #ifdef _DEBUG_MY_STRING_
-int main (void)
+int32 main (void)
 {
     char buff[13] = "abcdefghijkl";
 

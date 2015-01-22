@@ -98,22 +98,22 @@ char g_buffer_page[PAGE_SIZE];
  *
  **/
 typedef struct _super_page {
-    unsigned char checksum;//0x0 the xor value of the super block
-    unsigned char version;//0x1
-    unsigned char byte_order;//0x2, 0 -- little endian, 1 -- big endian
-    unsigned char page_size;//0x3 actual page size = 2 ^ pageSize (>= 256 = 2 ^ 8)
+    char checksum;//0x0 the xor value of the super block
+    uchar version;//0x1
+    uchar byte_order;//0x2, 0 -- little endian, 1 -- big endian
+    uchar page_size;//0x3 actual page size = 2 ^ pageSize (>= 256 = 2 ^ 8)
 
     char magic[4];//0x4 -- 0x4d 79 46 53 (MyFS)
-    unsigned int total_pages;//0x8 blocks contained of the disk
-    unsigned int create_datetime;//0xc the creation datetime of MyFS, year[6bit].month[4bit].day[5bit].hour[5bit].minute[6bit].sec[6bit]
+    int32 total_pages;//0x8 blocks contained of the disk
+    int32 create_datetime;//0xc the creation datetime of MyFS, year[6bit].month[4bit].day[5bit].hour[5bit].minute[6bit].sec[6bit]
     // 
-    unsigned int pages_alloc_table;//0x10 the pages occupied by allocation table
-    unsigned int first_idle_page;//0x14 the first unused page no
-    unsigned int last_idle_page;//0x18 the last unused page no
-    unsigned int idle_pages_num;//0x1c the total number of unused pages
-    unsigned int directory;//0x20 the first page NO. of directory
-    unsigned int directory_last;//0x24 the last page NO. of direcotry
-    int PAT_start[PAT_PRE_INT_NUM];
+    int32 pages_alloc_table;//0x10 the pages occupied by allocation table
+    int32 first_idle_page;//0x14 the first unused page no
+    int32 last_idle_page;//0x18 the last unused page no
+    int32 idle_pages_num;//0x1c the total number of unused pages
+    int32 directory;//0x20 the first page NO. of directory
+    int32 directory_last;//0x24 the last page NO. of direcotry
+    int32 PAT_start[PAT_PRE_INT_NUM];
 }super_page;
 static super_page *g_p_super_page = NULL;
 #define INIT_SUPER_PAGE() do {\
@@ -133,20 +133,6 @@ static super_page *g_p_super_page = NULL;
                            g_p_current_dir = (directory *)g_buffer_directory;\
                        }\
                    } while (0)
-#ifndef MEM_SIZE
-    #error "MEM_SIZE should be defined first."
-#endif
-#if MEM_SIZE >= ((PAGE_SIZE >> 1) + (PAGE_SIZE << 1))
-    static char g_buffer_super_page[sizeof (super_page)];
-    static char g_buffer_directory[sizeof (directory)];
-    #define DESTROY_SUPER_PAGE()
-    #define DESTROY_CWD()
-#else
-    static char *g_buffer_super_page = g_buffer_page;
-    static char *g_buffer_directory  = g_buffer_page;
-    #define DESTROY_SUPER_PAGE() g_p_super_page = NULL 
-    #define DESTROY_CWD() g_buffer_directory = NULL
-#endif
 
 #define PAGE_OFFSET_SET_V_P(p_page, offset, offset_type, v, v_type) *(v_type *)(((offset_type *)p_page) + offset) = v
 #define BYTE_ORDRE_STORED g_p_super_page->byte_order
@@ -181,14 +167,30 @@ typedef struct _directory {
     char name[8];//0x0
     char extension[3];//0x8
     char type;//0xb P.S. when the MSB is set, means the node is used, else not
-    int parent_filesize;//0xc node index, for file node, this field record the file length
-    int sibling;//0x10 node index
-    int first_child_lastpage;//0x14 node index
-    int first_data_page;//0x18 first page no of the data stored, only file should set it
-    int create_datetime;//0x1c the creation datetime of MyFS, year[6bit].month[4bit].day[5bit].hour[5bit].minute[6bit].sec[6bit]
+    int32 parent_filesize;//0xc node index, for file node, this field record the file length
+    int32 sibling;//0x10 node index
+    int32 first_child_lastpage;//0x14 node index
+    int32 first_data_page;//0x18 first page no of the data stored, only file should set it
+    int32 create_datetime;//0x1c the creation datetime of MyFS, year[6bit].month[4bit].day[5bit].hour[5bit].minute[6bit].sec[6bit]
 }directory;
+
+#ifndef MEM_SIZE
+    #error "MEM_SIZE should be defined first."
+#endif
+#if MEM_SIZE >= ((PAGE_SIZE >> 1) + (PAGE_SIZE << 1))
+    static char g_buffer_super_page[sizeof (super_page)];
+    static char g_buffer_directory[sizeof (directory)];
+    #define DESTROY_SUPER_PAGE()
+    #define DESTROY_CWD()
+#else
+    static char *g_buffer_super_page = g_buffer_page;
+    static char *g_buffer_directory  = g_buffer_page;
+    #define DESTROY_SUPER_PAGE() g_p_super_page = NULL 
+    #define DESTROY_CWD() g_buffer_directory = NULL
+#endif
+
 static directory *g_p_current_dir = NULL;
-static int g_i_current_dir_index = PAGE_NULL;
+static int32 g_i_current_dir_index = PAGE_NULL;
 #define DIR_NODE_NUM_PER_PAGE  (PAGE_SIZE >> 3)
 #define I_NAME_LEN 8
 #define I_EXT_LEN  3
@@ -199,56 +201,56 @@ static int g_i_current_dir_index = PAGE_NULL;
  *
  * @return <enum> LITTLE_ENDIAN | BIG_ENDIAN
  **/
-extern int _little_big_endian ();
+extern int32 _little_big_endian ();
 /**
  * write data to the page specified by pageNo
  *
- * @param <int> page_no  the page NO to be written
+ * @param <int32> page_no  the page NO to be written
  * @param <const char*> p_src the page content to be written
- * @param <int> len the content length
+ * @param <int32> len the content length
  *
- * @return <int> the length written (>=0) or error occurred (< 0)
+ * @return <int32> the length written (>=0) or error occurred (< 0)
  *
  **/
-extern int _write_page (int page_no, const void *p_src, int len);
+extern int32 _write_page (int32 page_no, const void *p_src, int32 len);
 /**
  * Write contents to the disk
- * @param <int> page_no the page NO to be written
- * @param <int> offset the page offset to be written
+ * @param <int32> page_no the page NO to be written
+ * @param <int32> offset the page offset to be written
  * @param <const void *> p_src the start address of the contents
- * @param <int> len the length of the content
+ * @param <int32> len the length of the content
  *
- * @return <int> (>=0) the length written, or error (< 0)
+ * @return <int32> (>=0) the length written, or error (< 0)
  **/
-extern int _write_page_offset (int page_no, int offset, const void *p_src, int len);
+extern int32 _write_page_offset (int32 page_no, int32 offset, const void *p_src, int32 len);
 /**
  * Write the super page's content
  * @param <super_page *> p_super_page
  *
- * @return <int> the length written (>=0) or error occurred (< 0)
+ * @return <int32> the length written (>=0) or error occurred (< 0)
  **/
-extern int _write_super_page (super_page *p_super_page);
+extern int32 _write_super_page (super_page *p_super_page);
 /**
  * read the data of a page
  *
- * @param <int>  page_no  the page index (based on 0) to be read
+ * @param <int32>  page_no  the page index (based on 0) to be read
  * @param <void *> p_page_buffer the buffer to store the page content
  *
- * @return <int> the length read (>=0) or error occurred (< 0)
+ * @return <int32> the length read (>=0) or error occurred (< 0)
  **/
-extern void *_read_page (int page_no, void *p_page_buffer);
+extern void *_read_page (int32 page_no, void *p_page_buffer);
 /**
  * Read the content specified by page_no and page offset
  * 
- * @param <int> page_no  the page to be read
- * @param <int> offset   the offset(based on 0) relative the beginning of the page
+ * @param <int32> page_no  the page to be read
+ * @param <int32> offset   the offset(based on 0) relative the beginning of the page
  * @param <void *>p_buffer the buffer to store the content
- * @param <int> len  the length to be read
+ * @param <int32> len  the length to be read
  * 
- * @return <int> the length read(>=0) or an error occured (< 0)
+ * @return <int32> the length read(>=0) or an error occured (< 0)
  *
  **/
-extern void *_read_page_offset (int page_no, int offset, void *p_buffer, int len);
+extern void *_read_page_offset (int32 page_no, int32 offset, void *p_buffer, int32 len);
 /**
  *
  * Convert the byte order of the content of a directory node
@@ -257,7 +259,7 @@ extern void *_read_page_offset (int page_no, int offset, void *p_buffer, int len
  * @param <enum> to
  *
  **/
-extern void *_convert_directory_byte_order (directory *p_dir, int from, int to);
+extern void *_convert_directory_byte_order (directory *p_dir, int32 from, int32 to);
 /**
  * convert the byte order of super page's content
  * @param <super_page *>  p_super_page the start address of the content
@@ -266,7 +268,7 @@ extern void *_convert_directory_byte_order (directory *p_dir, int from, int to);
  *
  * @return <void *> p_super_page
  **/
-extern void *_convert_super_page_byte_order (super_page *p_super_page, int from, int to);
+extern void *_convert_super_page_byte_order (super_page *p_super_page, int32 from, int32 to);
 /**
  * convert the byte order of the content pointed by p_page_addr
  * @param <void *>  p_page_addr 
@@ -275,45 +277,45 @@ extern void *_convert_super_page_byte_order (super_page *p_super_page, int from,
  *
  * @return <void *> p_page_addr
  **/
-extern void *_convert_page_byte_order (void *p_page_addr, int from, int to);
+extern void *_convert_page_byte_order (void *p_page_addr, int32 from, int32 to);
 /**
  * calculate the PAT offset of page, return page, and *pageIndex will be the offset in the related page.
  * 
- * @param <int> page_no (based on 0)
+ * @param <int32> page_no (based on 0)
  *
- * @return <int> page no & page offset will be store back to page_no
+ * @return <int32> page no & page offset will be store back to page_no
  **/		
-extern int _calc_page_offset_in_PAT (int *page_no);
+extern int32 _calc_page_offset_in_PAT (int32 *page_no);
 /**
  * calculate the pages should be occupied by page allocation table
  *
- * @return <int>
+ * @return <int32>
  **/
-static int _calc_PAT_pages ();
+static int32 _calc_PAT_pages ();
 /**
  * initialize a link list, will set *p_start = start, *(p_start + 1) = start + 1, ..., *(p_start + count - 1) = start + count - 1
  *
- * @param <int *> p_start
- * @param <int> start
- * @param <int> count
+ * @param <int32 *> p_start
+ * @param <int32> start
+ * @param <int32> count
  *
- * @return <int> count if success, error (< 0)
+ * @return <int32> count if success, error (< 0)
  **/
-static int _init_page_link_list (int *p_start, int start, int count);
+static int32 _init_page_link_list (int32 *p_start, int32 start, int32 count);
 /**
  * initialize the super page
  *
  **/
-static int _init_super_page ();
+static int32 _init_super_page ();
 /**
  * calcuate the checksum start from p_mem
  * 
  * @param <const char *> p_mem
- * @param <int> len the bytes to be calculated
+ * @param <int32> len the bytes to be calculated
  *
  * @return <char>
  **/
-static char _checksum (const char *p_mem, int len);
+static char _checksum (const char *p_mem, int32 len);
 /**
  * initialize the part located at in the super page of page alloc table
  *
@@ -339,22 +341,22 @@ static void _init_idle_page_link_list ();
  *
  * Calcute the last page NO of page alloc table
  *
- * @return <int> the last page NO of PAT
+ * @return <int32> the last page NO of PAT
  *
  **/
-static int _calc_PAT_page_end ();
+static int32 _calc_PAT_page_end ();
 /**
  *
  * Calcuate the last page NO of directory
  *
- * @return <int>
+ * @return <int32>
  **/
-static int _calc_dir_page_end ();
+static int32 _calc_dir_page_end ();
 /**
  * Create root directory
  *
  **/
-static int _create_root_dir ();
+static int32 _create_root_dir ();
 /**************************Functions listed below can be used by external code***************/
 /**
  *
@@ -365,128 +367,128 @@ extern void setup_FS();
 /**
  * Judge whethe file system exists correctly
  *
- * @return <int> > 0 (success), <= 0 (error)
+ * @return <int32> > 0 (success), <= 0 (error)
  *
  **/
-extern int is_FS_exist ();
+extern int32 is_FS_exist ();
 /**
  * Get the parent directory by path name
  * 
  * @param <char *> p_dir_name
  * @param <directory *> p_parent_directory parent directory node value will be stored here
  *
- * @return <int> the directory index of parent directory
+ * @return <int32> the directory index of parent directory
  *
  **/
-static int _get_parent_directory_value_by_path_name (char *p_dir_name, directory *p_parent_directory);
-static int _get_directory_no_by_name (char *p_dir_name);
+static int32 _get_parent_directory_value_by_path_name (char *p_dir_name, directory *p_parent_directory);
+static int32 _get_directory_no_by_name (char *p_dir_name);
 /**
  *
  * Open a file
  *
  * @param <char *> file_name
- * @param <int> create_if_not_exist (if this value is not 0, then a new empty file will be created if it does not exist before)
+ * @param <int32> create_if_not_exist (if this value is not 0, then a new empty file will be created if it does not exist before)
  *
- * @return <int> > 0 (the directory node index of the file), < 0 (error)
+ * @return <int32> > 0 (the directory node index of the file), < 0 (error)
  *
  **/
-extern int open_file (char *file_name, int create_if_not_exist);
+extern int32 open_file (char *file_name, int32 create_if_not_exist);
 /**
  * create a file
  *
  * @param <const char *> file_name (e.g. '/path/path/file.ext', 'file.ext')
  * @param <const void *> p_file_data contents of the file
- * @param <int> len length of content's bytes
+ * @param <int32> len length of content's bytes
  *
- * @return <int> > 0 (success), < 0 (error occured)
+ * @return <int32> > 0 (success), < 0 (error occured)
  *
  **/
-extern int create_file (const char *file_name, const void *p_file_data, int len);
+extern int32 create_file (const char *file_name, const void *p_file_data, int32 len);
 /**
  * read a file's content into a buffer
  *
  * @param <const char *> file_name 
  * @param <void *> p_addr buffer the file content
- * @param <int> offset the offset of file to be read
- * @param <int> len bytes to be read
+ * @param <int32> offset the offset of file to be read
+ * @param <int32> len bytes to be read
  *
- * @return <int> > 0 (success, may less than len if no more content exists), 0 -- already the file end, < 0 (error)
+ * @return <int32> > 0 (success, may less than len if no more content exists), 0 -- already the file end, < 0 (error)
  *
  **/
-extern int read_file (const char *file_name, void *p_addr, int offset, int len);
+extern int32 read_file (const char *file_name, void *p_addr, int32 offset, int32 len);
 /**
  * Write contents to a file
  *
- * @param <int> i_directory_node_no
+ * @param <int32> i_directory_node_no
  * @param <const void *> p_addr contents to be written
- * @param <int> offset the offset to put the contents
- * @param <int> len bytes of the contents
+ * @param <int32> offset the offset to put the contents
+ * @param <int32> len bytes of the contents
  *
- * @return <int> > 0 (success) < 0 (error)
+ * @return <int32> > 0 (success) < 0 (error)
  *
  **/
-extern int write_file (int i_directory_node_no, const void *p_addr, int offset, int len);
+extern int32 write_file (int32 i_directory_node_no, const void *p_addr, int32 offset, int32 len);
 /**
  * Create a directory
  *
  * @param <char *> dir_name
  * 
- * @return <int> >= 0 (success), < 0 (error occured)
+ * @return <int32> >= 0 (success), < 0 (error occured)
  *
  **/
-extern int create_dir (char *dir_name);
+extern int32 create_dir (char *dir_name);
 /**
  * Remove a directory
  *
  * @param <const char *> dir_name
  *
- * @return <int> >= 0 (success), < 0 (error)
+ * @return <int32> >= 0 (success), < 0 (error)
  *
  **/
-extern int rm_dir (char *dir_name);
+extern int32 rm_dir (char *dir_name);
 /**
  * remove a file
  *
  * @param <const char *> file_name
  *
- * @return <int> >= 0 (success), < 0 (error occured)
+ * @return <int32> >= 0 (success), < 0 (error occured)
  *
  **/
-extern int rm_file (char *file_name);
+extern int32 rm_file (char *file_name);
 /**
  *
  * Change current working directory to dir_name
  *
  * @param <const char *> dir_name target working directory
  *
- * @return <int> >= 0 (success), < 0 (error)
+ * @return <int32> >= 0 (success), < 0 (error)
  *
  **/
-extern int cd (char *dir_name);
+extern int32 cd (char *dir_name);
 /**
  * List the next sibling tree node of current.
  *
  * @param <directory>
  *
  **/
-extern int list_next_child (char *p_dir_name, char **p_buff);
+extern int32 list_next_child (char *p_dir_name, char **p_buff);
 /**
  *
  * Get current working directory
  *
  * @param <char *> p_addr cwd will be stored here
  *
- * @param <int> >= 0 (success), < 0 (error)
+ * @param <int32> >= 0 (success), < 0 (error)
  *
  **/
-extern int get_cwd (char *p_addr);
+extern int32 get_cwd (char *p_addr);
 /**
  *
  * Get the remained space
  *
- * @return <int> >= 0 (success), < 0 (error)
+ * @return <int32> >= 0 (success), < 0 (error)
  *
  **/
-extern int get_free_bytes ();
+extern int32 get_free_bytes ();
 //
 #endif

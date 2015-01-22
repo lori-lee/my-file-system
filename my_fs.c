@@ -1,8 +1,9 @@
+#include "config.h"
 #include "my_fs.h"
 #include "my_string.h"
 #include "my_alloc.h"
 #include "error.h"
-int _little_big_endian ()
+int32 _little_big_endian ()
 {
     typedef union _tmp {
         unsigned short i;
@@ -12,71 +13,71 @@ int _little_big_endian ()
     t.i = 0x0100;
     return t.cs[0];
 }
-int _write_page_offset (int page_no, int offset, const void *p_addr, int len)
+int32 _write_page_offset (int32 page_no, int32 offset, const void *p_addr, int32 len)
 {
 }
-int _write_page (int page_no, const void *p_addr, int len)
+int32 _write_page (int32 page_no, const void *p_addr, int32 len)
 {
     return _write_page_offset (page_no, 0, p_addr, PAGE_SIZE);
 }
-void *_read_page_offset (int page_no, int offset, void *p_buffer, int len)
+void *_read_page_offset (int32 page_no, int32 offset, void *p_buffer, int32 len)
 {
     if (len <= 0) return p_buffer;
 }
-void *_read_page (int page_no, void *p_page_buffer)
+void *_read_page (int32 page_no, void *p_page_buffer)
 {
     return _read_page_offset (page_no, 0, p_page_buffer, PAGE_SIZE);
 }
-int _write_super_page (super_page *p_super_page)
+int32 _write_super_page (super_page *p_super_page)
 {
     p_super_page->checksum = _checksum ((const char *)&(p_super_page->version), PAGE_SIZE - 1);
     _convert_super_page_byte_order (p_super_page, _little_big_endian (), p_super_page->byte_order);
  
     return _write_page (IDX_SUPER_PAGE, (const char *)p_super_page, PAGE_SIZE);
 }
-void *_convert_directory_byte_order (directory *p_dir, int from, int to)
+void *_convert_directory_byte_order (directory *p_dir, int32 from, int32 to)
 {
     if (from != to) {
-        convert_byte_order (&(p_dir->parent_filesize), sizeof (int), from, to);
-        convert_byte_order (&(p_dir->sibling), sizeof (int), from, to);
-        convert_byte_order (&(p_dir->first_child_lastpage), sizeof (int), from, to);
-        convert_byte_order (&(p_dir->first_data_page), sizeof (int), from, to);
-        convert_byte_order (&(p_dir->create_datetime), sizeof (int), from, to);
+        convert_byte_order (&(p_dir->parent_filesize), sizeof (int32), from, to);
+        convert_byte_order (&(p_dir->sibling), sizeof (int32), from, to);
+        convert_byte_order (&(p_dir->first_child_lastpage), sizeof (int32), from, to);
+        convert_byte_order (&(p_dir->first_data_page), sizeof (int32), from, to);
+        convert_byte_order (&(p_dir->create_datetime), sizeof (int32), from, to);
     }
     return p_dir;
 }
-void *_convert_super_page_byte_order (super_page *p_super_page, int from, int to)
+void *_convert_super_page_byte_order (super_page *p_super_page, int32 from, int32 to)
 {
-    int i;
+    int32 i;
     if (from != to) {
-        convert_byte_order (&(p_super_page->total_pages), sizeof (unsigned int), from, to);
-        convert_byte_order (&(p_super_page->create_datetime), sizeof (unsigned int), from, to);
-        convert_byte_order (&(p_super_page->pages_alloc_table), sizeof (unsigned int), from, to);
-        convert_byte_order (&(p_super_page->first_idle_page), sizeof (unsigned int), from, to);
-        convert_byte_order (&(p_super_page->last_idle_page), sizeof (unsigned int), from, to);
-        convert_byte_order (&(p_super_page->idle_pages_num), sizeof (unsigned int), from, to);
-        convert_byte_order (&(p_super_page->directory), sizeof (unsigned int), from, to);
-        convert_byte_order (&(p_super_page->directory_last), sizeof (unsigned int), from, to);
+        convert_byte_order (&(p_super_page->total_pages), sizeof (int32), from, to);
+        convert_byte_order (&(p_super_page->create_datetime), sizeof (int32), from, to);
+        convert_byte_order (&(p_super_page->pages_alloc_table), sizeof (int32), from, to);
+        convert_byte_order (&(p_super_page->first_idle_page), sizeof (int32), from, to);
+        convert_byte_order (&(p_super_page->last_idle_page), sizeof (int32), from, to);
+        convert_byte_order (&(p_super_page->idle_pages_num), sizeof (int32), from, to);
+        convert_byte_order (&(p_super_page->directory), sizeof (int32), from, to);
+        convert_byte_order (&(p_super_page->directory_last), sizeof (int32), from, to);
         for (i = 0; i < PAT_PRE_INT_NUM; ++i) {
-            convert_byte_order (p_super_page->PAT_start + i, sizeof (int), from, to);
+            convert_byte_order (p_super_page->PAT_start + i, sizeof (int32), from, to);
         }
     }
     return p_super_page;
 }
-void *_convert_page_byte_order (void *p_page_addr, int from, int to)
+void *_convert_page_byte_order (void *p_page_addr, int32 from, int32 to)
 {
-    int i, *p_iaddr;
+    int32 i, *p_iaddr;
     if (from != to) {
-        p_iaddr = (int *)p_page_addr;
+        p_iaddr = (int32 *)p_page_addr;
         for (i = 0; i < PAGE_INT_NUM; ++i) {
-            convert_byte_order (p_iaddr + i, sizeof (int), from, to);
+            convert_byte_order (p_iaddr + i, sizeof (int32), from, to);
         }
     }
     return p_page_addr;
 }
-int _calc_page_offset_in_PAT (int *page_index)
+int32 _calc_page_offset_in_PAT (int32 *page_index)
 {
-    int page;
+    int32 page;
 
     if (*page_index < PAT_PRE_INT_NUM) {
         return IDX_SUPER_PAGE;
@@ -85,23 +86,23 @@ int _calc_page_offset_in_PAT (int *page_index)
     *page_index &= PAGE_INT_NUM - 1;
     return page + IDX_SUPER_PAGE;
 }
-static int _get_total_pages ()
+static int32 _get_total_pages ()
 {
     return PAGES_OCCUPIED (_get_flash_bytes ());
 }
 /**
  * Calculate the pages would be occupied for secondary allocation table.
  * 
- * @return <int> pages
+ * @return <int32> pages
  **/
-static int _calc_PAT_pages ()
+static int32 _calc_PAT_pages ()
 {
-    static int i_PAT_pages = -1;
+    static int32 i_PAT_pages = -1;
     if (i_PAT_pages >= 0) return i_PAT_pages;
     i_PAT_pages = (_get_total_pages () - PAT_PRE_INT_NUM + PAGE_INT_NUM - 1) >> (PAGE_SCALE - INT_BYTE_SCALE);
     return i_PAT_pages;
 }
-static int _init_page_link_list (int *p_iaddr, int start, int count)
+static int32 _init_page_link_list (int32 *p_iaddr, int32 start, int32 count)
 {
     while (count-- > 0) {
         *p_iaddr++ = start++;
@@ -110,9 +111,9 @@ static int _init_page_link_list (int *p_iaddr, int start, int count)
 }
 static void _init_PAT_table_pre ()
 {
-    int i, *p_PAT_start, t, i_cnt_PAT_pre, i_pages_PAT, i_cnt_dir;
+    int32 i, *p_PAT_start, t, i_cnt_PAT_pre, i_pages_PAT, i_cnt_dir;
 
-    p_PAT_start = (int *)PAT_START_P + IDX_SUPER_PAGE;
+    p_PAT_start = (int32 *)PAT_START_P + IDX_SUPER_PAGE;
     (*p_PAT_start++) = PAGE_SUPER;
     i_cnt_PAT_pre = PAT_PRE_INT_NUM - 1 - IDX_SUPER_PAGE;
     i_pages_PAT   = _calc_PAT_pages ();
@@ -129,17 +130,17 @@ static void _init_PAT_table_pre ()
     _init_page_link_list (p_PAT_start + i_pages_PAT + i_cnt_dir, g_p_super_page->first_idle_page + 1, i_cnt_PAT_pre - i_pages_PAT - i_cnt_dir);
     my_imemset (p_PAT_start + _get_total_pages () - 1 - (IDX_SUPER_PAGE + 1), PAGE_NULL, PAT_PRE_INT_NUM - _get_total_pages ());
 }
-static int _calc_PAT_page_end ()
+static int32 _calc_PAT_page_end ()
 {
-    int i_PAT_pages;
+    int32 i_PAT_pages;
 
     i_PAT_pages = _calc_PAT_pages () + IDX_SUPER_PAGE;
 
     return _calc_page_offset_in_PAT (&i_PAT_pages);
 }
-static int _calc_dir_page_end ()
+static int32 _calc_dir_page_end ()
 {
-    int i_dir_page_end;
+    int32 i_dir_page_end;
 
     i_dir_page_end = _calc_PAT_pages () + _get_reserved_direcotry_pages ();
 
@@ -147,9 +148,9 @@ static int _calc_dir_page_end ()
 }
 static void _init_PAT_table_remained ()
 {
-    int *p_PAT_page, i, i_cnt_dir, page, offset, i_last_page_offset;
+    int32 *p_PAT_page, i, i_cnt_dir, page, offset, i_last_page_offset;
 
-    p_PAT_page = (int *)g_buffer_page;
+    p_PAT_page = (int32 *)g_buffer_page;
     offset = _calc_PAT_pages () + IDX_SUPER_PAGE;
     //calcuate the max page NO & offset occupied by page allocation table mark(PAGE_ALLOC)
     page = _calc_page_offset_in_PAT (&offset);
@@ -180,9 +181,9 @@ static void _init_PAT_table_remained ()
 }
 static void _init_directory_link_list ()
 {
-    int i, *p_dir_page, i_cnt_dir, start_no, i_dir_page_start, page, offset, i_last_page_offset;
+    int32 i, *p_dir_page, i_cnt_dir, start_no, i_dir_page_start, page, offset, i_last_page_offset;
 
-    p_dir_page = (int *)g_buffer_page;
+    p_dir_page = (int32 *)g_buffer_page;
     i_cnt_dir  = _get_reserved_direcotry_pages ();
     //
     i_dir_page_start = _calc_PAT_page_end () + 1;
@@ -214,7 +215,7 @@ static void _init_directory_link_list ()
 }
 static void _init_idle_page_link_list ()
 {
-    int i, i_idle_page_start, i_idle_offset_start, i_idle_page_end, i_idle_offset_end, *p_idle_page, start_no;
+    int32 i, i_idle_page_start, i_idle_offset_start, i_idle_page_end, i_idle_offset_end, *p_idle_page, start_no;
 
     i_idle_page_start  = _calc_dir_page_end () + 1;
 
@@ -222,7 +223,7 @@ static void _init_idle_page_link_list ()
     i_idle_page_end  = _calc_page_offset_in_PAT (&i_idle_offset_end);
 
 
-    p_idle_page = (int *)g_buffer_page;
+    p_idle_page = (int32 *)g_buffer_page;
     start_no= ((i_idle_page_start - 1 - IDX_SUPER_PAGE) << (PAGE_SCALE - INT_BYTE_SCALE)) + PAT_PRE_INT_NUM + 1;
 
     for (i = i_idle_page_start; i < i_idle_page_end; ++i) {
@@ -235,7 +236,7 @@ static void _init_idle_page_link_list ()
 
     DESTROY_SUPER_PAGE ();
 }
-static char _checksum (const char *p_mem, int len)
+static char _checksum (const char *p_mem, int32 len)
 {
     char xor = 0;
     while (len-- > 0) {
@@ -243,7 +244,7 @@ static char _checksum (const char *p_mem, int len)
     }
     return xor;
 }
-static int _init_super_page ()
+static int32 _init_super_page ()
 {
     g_p_super_page = (super_page *)g_buffer_super_page;
     //
@@ -271,7 +272,7 @@ static int _init_super_page ()
 
     return _write_super_page (g_p_super_page);
 }
-int is_FS_exist ()
+int32 is_FS_exist ()
 {
     INIT_SUPER_PAGE ();
     if (my_strncmp ((const void *)(g_p_super_page->magic), (const void *)"MyFS", 4)) {
@@ -292,9 +293,9 @@ void setup_FS ()
     _init_idle_page_link_list ();
     _create_root_dir ();
 }
-static int _create_root_dir ()
+static int32 _create_root_dir ()
 {
-    int dir_no;
+    int32 dir_no;
 
     dir_no = _find_fist_idle_directory (0);
     assert (!dir_no);
@@ -313,9 +314,9 @@ static int _create_root_dir ()
 
     return 0;
 }
-static int _normalize_path (char *p_dir_name)
+static int32 _normalize_path (char *p_dir_name)
 {
-    int start, last, i;
+    int32 start, last, i;
     char *p_tmp = p_dir_name;
     
     last = my_strlen (p_dir_name) - 1;
@@ -335,9 +336,9 @@ static int _normalize_path (char *p_dir_name)
     *p_dir_name = '\0';
     return p_dir_name - p_tmp;
 }
-int open_file (char *file_name, int create_if_not_exist)
+int32 open_file (char *file_name, int32 create_if_not_exist)
 {
-    int len, i_parent_dir_no, i_file_name_start, i_dot_index;
+    int32 len, i_parent_dir_no, i_file_name_start, i_dot_index;
 
     directory *_p_directory_node;
     char _tmp_filename[I_NAME_LEN + I_EXT_LEN + 1];
@@ -371,28 +372,28 @@ int open_file (char *file_name, int create_if_not_exist)
     }
     return i_parent_dir_no;
 }
-int get_file_size (char *file_name)
+int32 get_file_size (char *file_name)
 {
-    int i_file_node_index;
+    int32 i_file_node_index;
 
     i_file_node_index = open_file (file_name, 0);
     if (i_file_node_index < 0) return i_file_node_index;
 
     return _get_file_size (i_file_node_index);
 }
-static int _get_real_page_index (int i_page_link_list_head, int i_page_offset)
+static int32 _get_real_page_index (int32 i_page_link_list_head, int32 i_page_offset)
 {
     while (i_page_offset-- > 0 && i_page_link_list_head >= 0) {
         i_page_link_list_head = _get_next_page (i_page_link_list_head);
     }
     return i_page_link_list_head;
 }
-int _write_aligned_by_page  (const void *p_addr, int offset, int len)
+int32 _write_aligned_by_page  (const void *p_addr, int32 offset, int32 len)
 {
 }
-int _append_file (int dir_no, directory *p_file_dir, const void *p_addr, int len)
+int32 _append_file (int32 dir_no, directory *p_file_dir, const void *p_addr, int32 len)
 {
-    int i_first_page_alloc = PAGE_NULL, i_pre_page_no = PAGE_NULL, i_page_offset, i_remained_bytes, _len = len;
+    int32 i_first_page_alloc = PAGE_NULL, i_pre_page_no = PAGE_NULL, i_page_offset, i_remained_bytes, _len = len;
 
     if (len <= 0) return 0;
     INIT_SUPER_PAGE ();
@@ -433,9 +434,9 @@ error:
     _free_page (i_remained_bytes);
     return i_page_offset;
 }
-int _overwrite_file_offset (directory *p_file_dir, int i_page_start, int i_page_offset, const void *p_addr, int len)
+int32 _overwrite_file_offset (directory *p_file_dir, int32 i_page_start, int32 i_page_offset, const void *p_addr, int32 len)
 {
-    int i_rt_code, _l;
+    int32 i_rt_code, _l;
 
     len = _l = MIN (p_file_dir->parent_filesize, len);
     while (len > 0) {
@@ -448,10 +449,10 @@ int _overwrite_file_offset (directory *p_file_dir, int i_page_start, int i_page_
 
     return _l;
 }
-int write_file (int i_file_node_index, const void *p_addr, int offset, int len)
+int32 write_file (int32 i_file_node_index, const void *p_addr, int32 offset, int32 len)
 {
     directory _tmp_directory;
-    int i_page_index, i_page_offset, i_page_real_index, i_rt_code;
+    int32 i_page_index, i_page_offset, i_page_real_index, i_rt_code;
 
     if (len <= 0) return 0;
 
@@ -480,10 +481,10 @@ int write_file (int i_file_node_index, const void *p_addr, int offset, int len)
 
     return len;
 }
-int _rm_dir_node (int i_parent_dir_no, char *p_name, int type)
+int32 _rm_dir_node (int32 i_parent_dir_no, char *p_name, int32 type)
 {
     directory _tmp_parent_dir, _tmp_curr_dir;
-    int i_pre_dir_no, i_current_dir_no;
+    int32 i_pre_dir_no, i_current_dir_no;
 
     type &= TYPE_FILE;
     if (PAGE_NULL == i_parent_dir_no || _normalize_path (p_name) <= 0 || !my_strncmp ("/", p_name, 1)) return E_INVALID_PARAM;
@@ -508,12 +509,12 @@ int _rm_dir_node (int i_parent_dir_no, char *p_name, int type)
     if (TYPE_DIR == type) {
     }
 }
-int _get_pre_sibling_dir_by_name (char *p_file_name)
+int32 _get_pre_sibling_dir_by_name (char *p_file_name)
 {
 }
-int rm_file (char *p_file_name)
+int32 rm_file (char *p_file_name)
 {
-    int i_last_slash_pos, i_parent_dir_no, i_rt_code;
+    int32 i_last_slash_pos, i_parent_dir_no, i_rt_code;
     directory _target_dir;
 
     if ((i_parent_dir_no = _get_parent_directory_value_by_path_name (p_file_name, &_target_dir)) < 0) return i_parent_dir_no;
@@ -524,18 +525,18 @@ int rm_file (char *p_file_name)
     }
     _get_directory_node_value (i_parent_dir_no, &_target_dir);
 }
-int cd (char *p_dir_name)
+int32 cd (char *p_dir_name)
 {
-    int i_current_no;
+    int32 i_current_no;
 
     if ((i_current_no = _get_directory_no_by_name (p_dir_name)) < 0) {
         return i_current_no;
     }
     return g_i_current_dir_index = i_current_no;
 }
-static int _get_directory_no_by_name (char *p_dir_name)
+static int32 _get_directory_no_by_name (char *p_dir_name)
 {
-    int len, i_current_dir_no, i_slash_start = 0, i_slash_end;
+    int32 len, i_current_dir_no, i_slash_start = 0, i_slash_end;
     char _tmp_name[I_NAME_LEN + I_EXT_LEN + 1];
     
     if ((len = _normalize_path (p_dir_name)) < 0) return len;
@@ -566,9 +567,9 @@ static int _get_directory_no_by_name (char *p_dir_name)
     }
     return i_current_dir_no;
 }
-static int _get_parent_directory_value_by_path_name (char *p_dir_name, directory *p_parent_directory)
+static int32 _get_parent_directory_value_by_path_name (char *p_dir_name, directory *p_parent_directory)
 {
-    int len, i_current_dir_no, i_slash_pos_start = 0, i_slash_pos_end, i_parent_path_end_pos;
+    int32 len, i_current_dir_no, i_slash_pos_start = 0, i_slash_pos_end, i_parent_path_end_pos;
     char _tmp_name[I_NAME_LEN + I_EXT_LEN];
 
     if ((len = _normalize_path (p_dir_name)) <= 0) return E_INVALID_PARAM;
@@ -602,9 +603,9 @@ static int _get_parent_directory_value_by_path_name (char *p_dir_name, directory
     }
     return i_current_dir_no;
 }
-int create_dir (char *p_dir_name)
+int32 create_dir (char *p_dir_name)
 {
-    int i_new_dir_no, i_first_child_dir_no, i_current_dir_no, i_slash_pos_start = 0, i_slash_pos_end, r;
+    int32 i_new_dir_no, i_first_child_dir_no, i_current_dir_no, i_slash_pos_start = 0, i_slash_pos_end, r;
     directory _tmp_current_dir;
     char _tmp_name[I_NAME_LEN + I_EXT_LEN];
 
@@ -635,9 +636,9 @@ int create_dir (char *p_dir_name)
 
     return i_new_dir_no;
 }
-int rm_dir (char *p_dir_name)
+int32 rm_dir (char *p_dir_name)
 {
-    int len, i_parent_dir_no, i_target_dir_no, i_pre_dir_no;
+    int32 len, i_parent_dir_no, i_target_dir_no, i_pre_dir_no;
     directory _tmp_dir_node;
     char _tmp_name[I_NAME_LEN + I_EXT_LEN + 1];
 
@@ -660,9 +661,9 @@ int rm_dir (char *p_dir_name)
 
     return _write_directory_node_value (i_target_dir_no, &_tmp_dir_node);
 }
-int get_cwd (char *p_addr)
+int32 get_cwd (char *p_addr)
 {
-    int i_current_dir_no, i_current_len = 0, i_delta_len, i_slash_start, i_slash_end;
+    int32 i_current_dir_no, i_current_len = 0, i_delta_len, i_slash_start, i_slash_end;
 
     i_current_dir_no = g_i_current_dir_index;
     while (PAGE_NULL != i_current_dir_no) {
@@ -680,11 +681,11 @@ int get_cwd (char *p_addr)
     }
     return 0;
 }
-int list_next_child (char *p_dir_name, char **p_buff)
+int32 list_next_child (char *p_dir_name, char **p_buff)
 {
-    static int i_sdir_no = PAGE_NULL, i_scurr_child = PAGE_NULL;
+    static int32 i_sdir_no = PAGE_NULL, i_scurr_child = PAGE_NULL;
     static char name[I_NAME_LEN + I_EXT_LEN + 1];
-    int i_len, i_curr_dir_no;
+    int32 i_len, i_curr_dir_no;
     directory _tmp_dir;
 
     if ((i_len = _normalize_path (p_dir_name)) <= 0) return E_INVALID_PARAM;
@@ -705,9 +706,9 @@ int list_next_child (char *p_dir_name, char **p_buff)
 }
 #ifdef _DEBUG_
 #undef _DEBUG_
-int main (void)
+int32 main (void)
 {
-    int page_no, page_index;
+    int32 page_no, page_index;
     char buff[] = "  //////////path_A//pathB///////a/filename.ext   ";
 
     my_console ("_little_big_endian:%d\n", _little_big_endian ());
