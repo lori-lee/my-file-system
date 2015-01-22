@@ -480,15 +480,47 @@ int write_file (int i_file_node_index, const void *p_addr, int offset, int len)
 
     return len;
 }
+int _rm_dir_node (int i_parent_dir_no, char *p_name, int type)
+{
+    directory _tmp_parent_dir, _tmp_curr_dir;
+    int i_pre_dir_no, i_current_dir_no;
+
+    type &= TYPE_FILE;
+    if (PAGE_NULL == i_parent_dir_no || _normalize_path (p_name) <= 0 || !my_strncmp ("/", p_name, 1)) return E_INVALID_PARAM;
+    _get_directory_node_value (i_parent_dir_no, &_tmp_parent_dir);
+
+    i_pre_dir_no = PAGE_NULL;
+    i_current_dir_no = _tmp_parent_dir.first_child_lastpage;
+    while (PAGE_NULL != i_current_dir_no) {
+        _get_directory_node_value (i_current_dir_no, &_tmp_curr_dir);
+        if (NODE_TYPE (_tmp_curr_dir) == type
+            && !my_strncmp (_tmp_curr_dir.name, p_name, my_strlen (p_name))) {
+            break;
+        }
+        i_pre_dir_no = i_current_dir_no;
+        i_current_dir_no = _tmp_curr_dir.sibling;
+    }
+    if (PAGE_NULL == i_current_dir_no) return TYPE_DIR == type ? E_NO_DIR : E_NO_FILE;
+    if (PAGE_NULL == i_pre_dir_no) {
+             
+    } else {
+    }
+    if (TYPE_DIR == type) {
+    }
+}
+int _get_pre_sibling_dir_by_name (char *p_file_name)
+{
+}
 int rm_file (char *p_file_name)
 {
     int i_last_slash_pos, i_parent_dir_no, i_rt_code;
     directory _target_dir;
 
     if ((i_parent_dir_no = _get_parent_directory_value_by_path_name (p_file_name, &_target_dir)) < 0) return i_parent_dir_no;
+    if (!my_strncmp ("/", p_file_name, 1)) return E_INVALID_PARAM;
     i_last_slash_pos = my_str_rpos ("/", p_file_name, 1, my_strlen (p_file_name));
-    if ((i_parent_dir_no = _get_child_directory_by_name (i_parent_dir_no, p_file_name + i_last_slash_pos + 1, my_strlen (p_file_name) - i_last_slash_pos, TYPE_FILE, &_target_dir)) < 0) {
-        return i_parent_dir_no;
+    if ((i_rt_code = _get_child_directory_by_name (i_parent_dir_no, p_file_name + i_last_slash_pos + 1, my_strlen (p_file_name) - i_last_slash_pos, TYPE_FILE, &_target_dir)) < 0) {
+        return i_rt_code;
     }
     _get_directory_node_value (i_parent_dir_no, &_target_dir);
 }
