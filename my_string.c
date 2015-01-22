@@ -116,14 +116,14 @@ void *my_memset (void *p_mem, char ch, int32 len)
 {
     int32 i, t, l, *p_iaddr;
     char *p_addr;
+
     if (len > 0) {
         p_iaddr = (int32 *)p_mem;
-        t = ch;
-        for (i = 1; i < INT_BYTES; ++i) t = (t << 8) | ch;
-        l = len >> INT_BYTE_SCALE;
-        for (i = 0; i < l; ++l) *p_iaddr++ = l;
+        t = (ch << 24) | (ch << 16) | (ch << 8) | ch;
+        l = len >> 2;
+        for (i = 0; i < l; ++i) *p_iaddr++ = t;
         p_addr = (char *)p_iaddr;
-        for (i = 0, l = len & ~(INT_BYTES - 1); i < l; ++i) *p_iaddr++ = ch;
+        for (i = 0, l = len & 3; i < l; ++i) *p_addr++ = ch;
     }
     return p_mem;
 }

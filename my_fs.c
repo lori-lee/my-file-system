@@ -717,9 +717,9 @@ int32 main (void)
     page_no = _calc_page_offset_in_PAT (&page_index);
     my_console ("page index:%d:%d, total pages:%d, PAT pages:%d\n", page_no, page_index, _get_total_pages (), _calc_PAT_pages ());
     _normalize_path (buff);
-    my_console ("%s\n", buff);
+    my_console ("first:%s\n", buff);
     _normalize_path (buff);
-    my_console ("%s\n", buff);
+    my_console ("Second:%s\n", buff);
     setup_FS ();
     return 0;
 }
