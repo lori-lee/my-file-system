@@ -1,3 +1,4 @@
+#include "config.h"
 #include "my_string.h"
 #include "my_fs.h"
 #include "error.h"
@@ -22,6 +23,7 @@ void *convert_byte_order (void *p_addr, int32 len, int32 from, int32 to)
 {
     int32 i, j;
     char *p_a, *p_b;	
+
     if (from != to) {
         for (i = 0, j = len - 1; i < j; ++i, --j) {
             p_a = (char *)p_addr + i;
@@ -48,9 +50,10 @@ void *convert_byte_order (void *p_addr, int32 len, int32 from, int32 to)
  **/
 void *convert_byte_order_by_unit (void *p_addr, int32 unit, int32 len, int32 from, int32 to)
 {
-    void *p_a;
+    char *p_a;
+
     if (from != to) {
-        p_a = p_addr;
+        p_a = (char *)p_addr;
         while (len >= unit) {
             convert_byte_order (p_a, unit, from, to);
             p_a += unit;
@@ -72,7 +75,8 @@ void *convert_byte_order_by_unit (void *p_addr, int32 unit, int32 len, int32 fro
  **/
 void *my_strncpy (const void *p_addr_src, void *p_addr_dest, int32 len)
 {
-    void *p_dest = p_addr_dest;
+    char *p_dest = (char *)p_addr_dest;
+
     if (len <= 0 || p_addr_src == p_addr_dest) return p_addr_dest;
     if (p_addr_src < p_addr_dest && p_addr_src + len > p_addr_dest) {//copy from the tail
         p_addr_src += len - 1;
@@ -235,7 +239,7 @@ void my_console (const char *p_str_format, ...)
             case 'c':
                 if (sizeof (void *) > sizeof (int32)) {//64 bit
                     ch = va_arg (var, int32);
-                } else ch = va_arg (var, char);
+                } else ch = va_arg (var, int);
                 _my_putchar (ch); break;
             case 's':
                 p_str = va_arg (var, const char *);
