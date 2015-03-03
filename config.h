@@ -17,11 +17,11 @@
     typedef int int32;
     typedef unsigned int uint32;
 #elif INT_BYTES == 2
-    #define INT_BYTE_SCALE 1
+    #define INT_BYTE_SCALE 2
     typedef long int32;
     typedef unsigned long uint32;
 #elif INT_BYTES == 1
-    #define INT_BYTE_SCALE 0
+    #define INT_BYTE_SCALE 2
     typedef long long int32;
 #endif
 typedef unsigned char uchar;

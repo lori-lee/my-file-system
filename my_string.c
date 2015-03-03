@@ -22,6 +22,7 @@
 void *convert_byte_order (void *p_addr, int32 len, int32 from, int32 to)
 {
     int32 i, j;
+
     char *p_a, *p_b;	
 
     if (from != to) {
@@ -99,6 +100,7 @@ void *my_strncpy (const void *p_addr_src, void *p_addr_dest, int32 len)
 int32 my_strncmp (const void *p_pattern, const void *p_subject, int32 len)
 {
     const char *p_str_pt, *p_str_sub;
+
     p_str_pt = (const char *)p_pattern;
     p_str_sub= (const char *)p_subject;
     while (len > 0) {
@@ -141,6 +143,7 @@ void *my_memset (void *p_mem, char ch, int32 len)
 void *my_imemset (void *p_mem, int32 v, int32 len)
 {
     int32 i, *p_iaddr;
+    
     if (len > 0) {
         p_iaddr = (int32 *)p_mem;
         for (i = 0; i < len; ++i) *p_iaddr++ = v;
@@ -159,6 +162,7 @@ void *my_imemset (void *p_mem, int32 v, int32 len)
 int32 my_str_rpos (const char *p_pattern, const char *p_subject, int32 len_pattern, int32 len_subject)
 {
     const char *p_t_subject = p_subject + len_subject - len_pattern;
+
     if (len_pattern > len_subject) return PAGE_NULL;
     while (p_t_subject >= p_subject) {
         if (!my_strncmp (p_pattern, p_t_subject, len_pattern)) return p_t_subject - p_subject;
@@ -179,12 +183,14 @@ int32 my_str_pos (const char *p_pattern, const char *p_subject, int32 start, int
 int32 my_strlen (const char *p_str)
 {
     int32 len = 0;
+
     while (*p_str++) len++;
     return len;
 }
 int32 my_itoa (int32 n, void *p_buff)
 {
     int32 i = 0, j = n;
+
     if (n < 0) n = -n;
     do {
         *(char *)(p_buff + i++) = (n % 10) | 0x30;
@@ -197,6 +203,7 @@ int32 my_itoa (int32 n, void *p_buff)
 int32 my_itohexa (int32 n, void *p_buff)
 {
     int32 i = 0, j = n;
+
     if (n < 0) n = -n;
     do {
         if ((n & 15) >= 10) *(char *)(p_buff + i++) = (n & 15) - 10 + 'A';
@@ -224,6 +231,7 @@ void my_console (const char *p_str_format, ...)
     int32 status = 0, i = 0, n;
     char tmp[INT_BYTES], ch;
     const char *p_str;
+
     va_list var;
     va_start (var, p_str_format);
     while (p_str_format[i]) {

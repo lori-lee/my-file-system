@@ -124,7 +124,7 @@ static int32 _write_directory_node_field (int32 dir_no, void *p_buff, int32 offs
     page = _calc_dir_target_page (&dir_no);
     if (offset + bytes > DIRECTORY_FIELD_OFFSET (parent_filesize)) {
         if (offset <= DIRECTORY_FIELD_OFFSET (parent_filesize)) {
-            convert_byte_order (p_buff + DIRECTORY_FIELD_OFFSET (parent_filesize) - offset, bytes + offset - DIRECTORY_FIELD_OFFSET (parent_filesize),  _little_big_endian (), byte_order);
+            convert_byte_order ((char *)p_buff + DIRECTORY_FIELD_OFFSET (parent_filesize) - offset, bytes + offset - DIRECTORY_FIELD_OFFSET (parent_filesize),  _little_big_endian (), byte_order);
         } else {
             convert_byte_order (p_buff, bytes, _little_big_endian (), byte_order);
         }
@@ -231,7 +231,7 @@ static int32 _get_directory_node_field_value (int32 i_dir_no, void *p_buff, int3
     _read_page_offset (page, i_dir_no * sizeof (directory) + offset, p_buff, bytes);
     if (offset + bytes > DIRECTORY_FIELD_OFFSET (parent_filesize)) {
         if (offset <= DIRECTORY_FIELD_OFFSET (parent_filesize)) {
-            convert_byte_order (p_buff + DIRECTORY_FIELD_OFFSET (parent_filesize) - offset, bytes + offset - DIRECTORY_FIELD_OFFSET (parent_filesize), byte_order, _little_big_endian ());
+            convert_byte_order ((char *)p_buff + DIRECTORY_FIELD_OFFSET (parent_filesize) - offset, bytes + offset - DIRECTORY_FIELD_OFFSET (parent_filesize), byte_order, _little_big_endian ());
         } else {
             convert_byte_order (p_buff, bytes, byte_order, _little_big_endian ());
         }

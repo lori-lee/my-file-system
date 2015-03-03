@@ -268,7 +268,7 @@ extern void *_convert_directory_byte_order (directory *p_dir, int32 from, int32 
  *
  * @return <void *> p_super_page
  **/
-extern void *_convert_super_page_byte_order (super_page *p_super_page, int32 from, int32 to);
+extern super_page *_convert_super_page_byte_order (super_page *p_super_page, int32 from, int32 to);
 /**
  * convert the byte order of the content pointed by p_page_addr
  * @param <void *>  p_page_addr 

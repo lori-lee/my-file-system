@@ -1,3 +1,4 @@
+#include "flash.h"
 #include "config.h"
 #include "my_fs.h"
 #include "my_string.h"
@@ -15,6 +16,9 @@ int32 _little_big_endian ()
 }
 int32 _write_page_offset (int32 page_no, int32 offset, const void *p_addr, int32 len)
 {
+    if (len <= 0) return E_INVALID_PARAM;    
+    flash_write ((page_no << PAGE_SCALE) + offset, (unsigned char *)p_addr, len); 
+    return len;
 }
 int32 _write_page (int32 page_no, const void *p_addr, int32 len)
 {
@@ -23,6 +27,10 @@ int32 _write_page (int32 page_no, const void *p_addr, int32 len)
 void *_read_page_offset (int32 page_no, int32 offset, void *p_buffer, int32 len)
 {
     if (len <= 0) return p_buffer;
+
+    flash_read ((page_no << PAGE_SCALE) + offset, (unsigned char *)p_buffer, len);
+
+    return p_buffer;
 }
 void *_read_page (int32 page_no, void *p_page_buffer)
 {
@@ -46,9 +54,10 @@ void *_convert_directory_byte_order (directory *p_dir, int32 from, int32 to)
     }
     return p_dir;
 }
-void *_convert_super_page_byte_order (super_page *p_super_page, int32 from, int32 to)
+super_page *_convert_super_page_byte_order (super_page *p_super_page, int32 from, int32 to)
 {
     int32 i;
+
     if (from != to) {
         convert_byte_order (&(p_super_page->total_pages), sizeof (int32), from, to);
         convert_byte_order (&(p_super_page->create_datetime), sizeof (int32), from, to);
@@ -67,10 +76,11 @@ void *_convert_super_page_byte_order (super_page *p_super_page, int32 from, int3
 void *_convert_page_byte_order (void *p_page_addr, int32 from, int32 to)
 {
     int32 i, *p_iaddr;
+
     if (from != to) {
         p_iaddr = (int32 *)p_page_addr;
         for (i = 0; i < PAGE_INT_NUM; ++i) {
-            convert_byte_order (p_iaddr + i, sizeof (int32), from, to);
+            convert_byte_order ((char *)p_iaddr + i, sizeof (int32), from, to);
         }
     }
     return p_page_addr;
@@ -82,7 +92,7 @@ int32 _calc_page_offset_in_PAT (int32 *page_index)
     if (*page_index < PAT_PRE_INT_NUM) {
         return IDX_SUPER_PAGE;
     }
-    page = ((*page_index -= PAT_PRE_INT_NUM) + PAGE_INT_NUM) >> PAGE_SCALE - INT_BYTE_SCALE;
+    page = ((*page_index -= PAT_PRE_INT_NUM) + PAGE_INT_NUM) >> (PAGE_SCALE - INT_BYTE_SCALE);
     *page_index &= PAGE_INT_NUM - 1;
     return page + IDX_SUPER_PAGE;
 }
@@ -116,7 +126,7 @@ static void _init_PAT_table_pre ()
     p_PAT_start = (int32 *)PAT_START_P + IDX_SUPER_PAGE;
     (*p_PAT_start++) = PAGE_SUPER;
     i_cnt_PAT_pre = PAT_PRE_INT_NUM - 1 - IDX_SUPER_PAGE;
-    i_pages_PAT   = _calc_PAT_pages ();
+    i_pages_PAT   = _calc_PAT_pages () - 1 - IDX_SUPER_PAGE;
     i_cnt_dir     = _get_reserved_direcotry_pages ();
     //
     my_imemset (p_PAT_start, PAGE_NULL, i_cnt_PAT_pre);
@@ -142,7 +152,7 @@ static int32 _calc_dir_page_end ()
 {
     int32 i_dir_page_end;
 
-    i_dir_page_end = _calc_PAT_pages () + _get_reserved_direcotry_pages ();
+    i_dir_page_end = _calc_PAT_pages () + _get_reserved_direcotry_pages () + IDX_SUPER_PAGE;
 
     return _calc_page_offset_in_PAT (&i_dir_page_end);
 }
@@ -175,7 +185,7 @@ static void _init_PAT_table_remained ()
             my_imemset (p_PAT_page + i_last_page_offset, PAGE_NULL, 1);
         }
         
-        _write_page (page, (const char *)p_PAT_page, PAGE_SUPER);
+        _write_page (page, (const char *)p_PAT_page, PAGE_SIZE);
     }
     DESTROY_SUPER_PAGE ();
 }
@@ -263,7 +273,7 @@ static int32 _init_super_page ()
     g_p_super_page->pages_alloc_table= _calc_PAT_pages ();
 
     g_p_super_page->first_idle_page= _calc_PAT_pages () + _get_reserved_direcotry_pages () + + IDX_SUPER_PAGE + 1;
-    g_p_super_page->last_idle_page = _get_total_pages () - 1 - IDX_SUPER_PAGE;
+    g_p_super_page->last_idle_page = _get_total_pages () - 1; 
     g_p_super_page->idle_pages_num = g_p_super_page->last_idle_page - g_p_super_page->first_idle_page + 1;
     g_p_super_page->directory      = IDX_SUPER_PAGE + _calc_PAT_pages () + 1;
     g_p_super_page->directory_last = g_p_super_page->directory + _get_reserved_direcotry_pages () - 1;
